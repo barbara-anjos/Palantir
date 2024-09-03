@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35219.272
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Palantir.Api", "src\Palantir.Api\Palantir.Api.csproj", "{76EA40D8-2CA9-4BF9-B9EA-10D1B5EE74EC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Palantir.Tests", "tests\Palantir.Tests\Palantir.Tests.csproj", "{1EAB9F14-0A79-4264-A2F8-E1635C57F48F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{76EA40D8-2CA9-4BF9-B9EA-10D1B5EE74EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76EA40D8-2CA9-4BF9-B9EA-10D1B5EE74EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76EA40D8-2CA9-4BF9-B9EA-10D1B5EE74EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76EA40D8-2CA9-4BF9-B9EA-10D1B5EE74EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EAB9F14-0A79-4264-A2F8-E1635C57F48F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EAB9F14-0A79-4264-A2F8-E1635C57F48F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EAB9F14-0A79-4264-A2F8-E1635C57F48F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EAB9F14-0A79-4264-A2F8-E1635C57F48F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C9DF8FEC-AA4B-4AB6-8502-7754A70CF827}
+	EndGlobalSection
+EndGlobal

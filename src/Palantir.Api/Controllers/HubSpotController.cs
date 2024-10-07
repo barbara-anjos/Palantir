@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Palantir.Api.Configurations;
 using Palantir.Api.Services;
-using static Palantir.Api.Models.ClickUpTaskUpdateModel;
 using static Palantir.Api.Models.HubSpotTicketModel;
 
 [ApiController]
@@ -12,74 +11,89 @@ public class HubSpotController : ControllerBase
 {
     private readonly string _hubSpotApiToken;
     private readonly ClickUpService _clickUpService;
+	private readonly HubSpotService _hubSpotService;
 
-    public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, ClickUpService clickUpService)
+	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, ClickUpService clickUpService)
     {
         _hubSpotApiToken = hubSpotSettings.Value.ApiToken;
         _clickUpService = clickUpService;
-    }    
-
-    //Atualizar tarefa no ClickUp com base em alterações do tíquete
-    [HttpPost("update-task-from-ticket")]
-    public async Task<IActionResult> UpdateTaskFromHubSpot([FromBody] HubSpotWebhookRequest webhookRequest)
-    {
-        var ticketId = webhookRequest.ObjectId;
-        var updatedProperties = webhookRequest.ChangedProperties;
-
-        // Buscar o ID da tarefa no ClickUp associada ao ID do tíquete no HubSpot
-        var taskId = await _clickUpService.GetTaskIdByTicketIdAsync(ticketId);
-        if (taskId != null)
-        {
-            var updatedTaskData = new ClickUpTaskUpdateData
-            {
-                Status = updatedProperties.Status,
-                Priority = updatedProperties.Priority,
-                DueDate = updatedProperties.DueDate
-            };
-
-            // Atualizar a tarefa no ClickUp
-            await _clickUpService.UpdateTaskAsync(taskId, updatedTaskData);
-            return Ok("Tarefa atualizada no ClickUp.");
-        }
-
-        return NotFound("Tarefa correspondente no ClickUp não encontrada.");
     }
 
-    //Excluir tarefa no ClickUp quando o tíquete for excluído no HubSpot
-    [HttpPost("delete-task-from-ticket")]
-    public async Task<IActionResult> DeleteTaskFromHubSpot([FromBody] HubSpotWebhookRequest webhookRequest)
-    {
-        var ticketId = webhookRequest.ObjectId;
+	[HttpPost("ticket")]
+	public async Task<IActionResult> CreateTicket([FromBody] HubSpotWebhookRequest request)
+	{
+		// Validação do request
+		if (request == null || string.IsNullOrEmpty(request.ObjectId))
+		{
+			return BadRequest("Invalid request.");
+		}
 
-        // Buscar o ID da tarefa no ClickUp associada ao ID do tíquete no HubSpot
-        var taskId = await _clickUpService.GetTaskIdByTicketIdAsync(ticketId);
+		// Obter detalhes do tíquete criado
+		var ticketResponse = await _hubSpotService.GetTicketByIdAsync(request.ObjectId);
+		if (ticketResponse == null)
+		{
+			return NotFound("Ticket not found.");
+		}
 
-        if (taskId != null)
-        {
-            // Excluir a tarefa no ClickUp
-            await _clickUpService.DeleteTaskAsync(taskId);
-            return Ok("Tarefa excluída no ClickUp.");
-        }
+		// Verificar se o tíquete está na pipeline e status desejados
+		string specificPipeline = "desired-pipeline-id";  // ID da pipeline desejada
+		string specificStatus = "desired-status";         // Status desejado
 
-        return NotFound("Tarefa correspondente no ClickUp não encontrada.");
-    }
+		if (ticketResponse.Properties.Pipeline == specificPipeline &&
+			ticketResponse.Properties.Status == specificStatus)
+		{
+			// Chama o serviço para processar o webhook e criar a tarefa no ClickUp
+			var result = await _clickUpService.CreateTaskFromTicket(ticketResponse);
 
-    //Buscar um tíquete no HubSpot usando Flurl
-    private async Task<HubSpotTicketProperties> GetHubSpotTicketById(string ticketId)
-    {
-        var requestUrl = $"https://api.hubapi.com/crm/v3/objects/tickets/{ticketId}";
+			return result ? Ok("Task created successfully in ClickUp.") : StatusCode(500, "Failed to create task in ClickUp.");
+		}
 
-        var ticketResponse = await requestUrl
-            .WithOAuthBearerToken(_hubSpotApiToken)
-            .GetJsonAsync<HubSpotTicketResponse>();
+		// Se o tíquete não estiver na pipeline ou status desejados, não faz nada
+		return Ok("Ticket does not meet the conditions for creating a task.");
+	}
 
-        return new HubSpotTicketProperties
-        {
-            Id = ticketResponse.Id,
-            Name = ticketResponse.Properties.Name,
-            Status = ticketResponse.Properties.Status,
-            Priority = ticketResponse.Properties.Priority,
-            CreatedAt = ticketResponse.Properties.CreatedAt
-        };
-    }
+	////Atualizar tarefa no ClickUp com base em alterações do tíquete
+	//[HttpPost("update-task-from-ticket")]
+	//public async Task<IActionResult> UpdateTaskFromHubSpot([FromBody] HubSpotWebhookRequest webhookRequest)
+	//{
+	//    var ticketId = webhookRequest.ObjectId;
+	//    var updatedProperties = webhookRequest.ChangedProperties;
+
+	//    // Buscar o ID da tarefa no ClickUp associada ao ID do tíquete no HubSpot
+	//    var taskId = await _clickUpService.GetTaskIdByTicketIdAsync(ticketId);
+	//    if (taskId != null)
+	//    {
+	//        var updatedTaskData = new ClickUpTaskUpdateData
+	//        {
+	//            Status = updatedProperties.Status,
+	//            Priority = updatedProperties.Priority,
+	//            DueDate = updatedProperties.DueDate
+	//        };
+
+	//        // Atualizar a tarefa no ClickUp
+	//        await _clickUpService.UpdateTaskAsync(taskId, updatedTaskData);
+	//        return Ok("Tarefa atualizada no ClickUp.");
+	//    }
+
+	//    return NotFound("Tarefa correspondente no ClickUp não encontrada.");
+	//}
+
+	////Excluir tarefa no ClickUp quando o tíquete for excluído no HubSpot
+	//[HttpPost("delete-task-from-ticket")]
+	//public async Task<IActionResult> DeleteTaskFromHubSpot([FromBody] HubSpotWebhookRequest webhookRequest)
+	//{
+	//    var ticketId = webhookRequest.ObjectId;
+
+	//    // Buscar o ID da tarefa no ClickUp associada ao ID do tíquete no HubSpot
+	//    var taskId = await _clickUpService.GetTaskIdByTicketIdAsync(ticketId);
+
+	//    if (taskId != null)
+	//    {
+	//        // Excluir a tarefa no ClickUp
+	//        await _clickUpService.DeleteTaskAsync(taskId);
+	//        return Ok("Tarefa excluída no ClickUp.");
+	//    }
+
+	//    return NotFound("Tarefa correspondente no ClickUp não encontrada.");
+	//}
 }

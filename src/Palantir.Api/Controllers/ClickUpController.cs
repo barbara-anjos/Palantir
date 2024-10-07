@@ -41,36 +41,36 @@ public class ClickUpController : ControllerBase
         return Ok(task);
     }
 
-    // Webhook do ClickUp: Atualizar status do tíquete no HubSpot quando o status da tarefa for alterado no ClickUp
-    [HttpPost("update-ticket-from-task")]
-    public async Task<IActionResult> UpdateTicketFromClickUp([FromBody] ClickUpWebhookRequest webhookRequest)
-    {
-        var taskId = webhookRequest.ObjectId;
-        var updatedProperties = webhookRequest.ChangedProperties;
+    //// Webhook do ClickUp: Atualizar status do tíquete no HubSpot quando o status da tarefa for alterado no ClickUp
+    //[HttpPost("update-ticket-from-task")]
+    //public async Task<IActionResult> UpdateTicketFromClickUp([FromBody] ClickUpWebhookRequest webhookRequest)
+    //{
+    //    var taskId = webhookRequest.ObjectId;
+    //    var updatedProperties = webhookRequest.ChangedProperties;
 
-        // Buscar o tíquete no HubSpot associado à tarefa no ClickUp
-        var hubSpotTicketId = await GetHubSpotTicketIdByTaskId(taskId);
+    //    // Buscar o tíquete no HubSpot associado à tarefa no ClickUp
+    //    var hubSpotTicketId = await GetHubSpotTicketIdByTaskId(taskId);
 
-        if (hubSpotTicketId != null)
-        {
-            // Atualizar o status do tíquete no HubSpot
-            await _hubSpotService.UpdateTicketStatusAsync(hubSpotTicketId, updatedProperties.Status);
-            return Ok("Tíquete no HubSpot atualizado com sucesso.");
-        }
+    //    if (hubSpotTicketId != null)
+    //    {
+    //        // Atualizar o status do tíquete no HubSpot
+    //        await _hubSpotService.UpdateTicketStatusAsync(hubSpotTicketId, updatedProperties.Status);
+    //        return Ok("Tíquete no HubSpot atualizado com sucesso.");
+    //    }
 
-        return NotFound("Tíquete correspondente no HubSpot não encontrado.");
-    }
+    //    return NotFound("Tíquete correspondente no HubSpot não encontrado.");
+    //}
 
-    // Método para buscar o ID do tíquete do HubSpot associado a uma tarefa no ClickUp
-    private async Task<string> GetHubSpotTicketIdByTaskId(string taskId)
-    {
-        var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
+    //Método para buscar o ID do tíquete do HubSpot associado a uma tarefa no ClickUp
+    //private async Task<string> GetHubSpotTicketIdByTaskId(string taskId)
+    //{
+    //    var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
 
-        var taskResponse = await requestUrl
-            .WithOAuthBearerToken(_clickUpApiToken)
-            .GetJsonAsync<ClickUpTaskResponse>();
+    //    var taskResponse = await requestUrl
+    //        .WithOAuthBearerToken(_clickUpApiToken)
+    //        .GetJsonAsync<ClickUpTaskResponse>();
 
-        return taskResponse.CustomFields
-            .FirstOrDefault(field => field.Name == "HubSpot Ticket ID")?.Value;
-    }
+    //    return taskResponse.CustomFields
+    //        .FirstOrDefault(field => field.Name == "HubSpot Ticket ID")?.Value;
+    //}
 }

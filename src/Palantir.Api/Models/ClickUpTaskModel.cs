@@ -36,5 +36,12 @@
             public string Assignee { get; set; }
         }
 
-    }
+		public class ClickUpTaskUpdateData
+		{
+			public string Status { get; set; }
+			public string Priority { get; set; }
+			public DateTime DueDate { get; set; }
+		}
+
+	}
 }

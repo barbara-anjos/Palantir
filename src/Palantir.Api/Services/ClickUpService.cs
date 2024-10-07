@@ -50,23 +50,23 @@ namespace Palantir.Api.Services
         }
 
         // Novo método para criar tarefa a partir do tíquete do HubSpot
-        public async Task<bool> CreateTaskFromTicket(HubSpotTicketResponse ticketResponse)
+        public async Task<bool> CreateTaskFromTicket(HubSpotTicketProperties ticketProperties)
         {
             var clickUpTask = new ClickUpTask
             {
-                Name = ticketResponse.Properties.Name,
-                Status = ticketResponse.Properties.Status,
+                Name = ticketProperties.Name,
+                Status = ticketProperties.Status,
                 CustomFields = new List<ClickUpCustomField>
             {
                 new ClickUpCustomField
                 {
                     Name = "HubSpot Ticket ID",
-                    Value = ticketResponse.Id
+                    Value = ticketProperties.Id
                 },
                 new ClickUpCustomField
                 {
                     Name = "Priority",
-                    Value = ticketResponse.Properties.Priority
+                    Value = ticketProperties.Priority
                 }
             }
             };

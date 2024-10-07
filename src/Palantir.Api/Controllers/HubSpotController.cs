@@ -29,8 +29,8 @@ public class HubSpotController : ControllerBase
 		}
 
 		// Obter detalhes do tíquete criado
-		var ticketResponse = await _hubSpotService.GetTicketByIdAsync(request.ObjectId);
-		if (ticketResponse == null)
+		var ticketProperties = await _hubSpotService.GetTicketByIdAsync(request.ObjectId);
+		if (ticketProperties == null)
 		{
 			return NotFound("Ticket not found.");
 		}
@@ -39,11 +39,11 @@ public class HubSpotController : ControllerBase
 		string specificPipeline = "desired-pipeline-id";  // ID da pipeline desejada
 		string specificStatus = "desired-status";         // Status desejado
 
-		if (ticketResponse.Properties.Pipeline == specificPipeline &&
-			ticketResponse.Properties.Status == specificStatus)
+		if (ticketProperties.Pipeline == specificPipeline &&
+			ticketProperties.Status == specificStatus)
 		{
 			// Chama o serviço para processar o webhook e criar a tarefa no ClickUp
-			var result = await _clickUpService.CreateTaskFromTicket(ticketResponse);
+			var result = await _clickUpService.CreateTaskFromTicket(ticketProperties);
 
 			return result ? Ok("Task created successfully in ClickUp.") : StatusCode(500, "Failed to create task in ClickUp.");
 		}

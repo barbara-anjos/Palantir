@@ -1,16 +1,14 @@
 using Microsoft.Extensions.Configuration;
+using Palantir.Api.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-public void ConfigureServices(IServiceCollection services)
-{
-    // Carregar as configurações do ClickUp
-    services.Configure<ClickUpSettings>(Configuration.GetSection("ClickUpSettings"));
-}
 
+// Carregar as configurações do ClickUp
+    builder.Services.Configure<ClickUpSettings>(builder.Configuration.GetSection("ClickUpSettings"));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

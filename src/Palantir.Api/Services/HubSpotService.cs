@@ -14,14 +14,14 @@ public class HubSpotService
     public HubSpotService(HttpClient httpClient, IOptions<HubSpotSettings> hubSpotSettings)
     {
         _httpClient = httpClient;
-        _apiToken = hubSpotSettings.Value.ApiToken;
+		_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
+		_apiToken = hubSpotSettings.Value.ApiToken;
     }
 
     // Método para buscar um tíquete no HubSpot por ID e retornar o modelo HubSpotTicket
     public async Task<HubSpotTicketProperties> GetTicketByIdAsync(string ticketId)
     {
-        var requestUrl = $"https://api.hubapi.com/crm/v3/objects/tickets/{ticketId}";
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
+        var requestUrl = $"https://api.hubapi.com/crm/v3/objects/tickets/{ticketId}";       
 
         var response = await _httpClient.GetAsync(requestUrl);
 
@@ -66,6 +66,6 @@ public class HubSpotService
     //    {
     //        throw new Exception("Erro ao atualizar o status do tíquete no HubSpot.");
     //    }
-    }
+    //}
 }
 

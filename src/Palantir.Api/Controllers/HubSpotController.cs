@@ -9,13 +9,13 @@ using static Palantir.Api.Models.HubSpotTicketModel;
 [Route("api/hubspot")]
 public class HubSpotController : ControllerBase
 {
-    private readonly string _hubSpotApiToken;
+    private readonly string _hubSpotApiKey;
     private readonly ClickUpService _clickUpService;
 	private readonly HubSpotService _hubSpotService;
 
 	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, ClickUpService clickUpService)
     {
-        _hubSpotApiToken = hubSpotSettings.Value.ApiToken;
+        _hubSpotApiKey = hubSpotSettings.Value.ApiKey;
         _clickUpService = clickUpService;
     }
 

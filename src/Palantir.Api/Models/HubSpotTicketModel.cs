@@ -10,14 +10,8 @@
 		/// </summary>
 		public class HubSpotWebhookRequest
 		{
-			/// <summary>
-			/// Gets or sets the ID of the ticket in HubSpot.
-			/// </summary>
 			public string ObjectId { get; set; }
 
-			/// <summary>
-			/// Gets or sets the list of changed properties in HubSpot.
-			/// </summary>
 			public List<HubSpotChangedProperty> HubSpotChangedProperties { get; set; }
 
 			/// <summary>
@@ -25,14 +19,8 @@
 			/// </summary>
 			public class HubSpotTicketResponse
 			{
-				/// <summary>
-				/// Gets or sets the ID of the ticket.
-				/// </summary>
 				public string Id { get; set; }
 
-				/// <summary>
-				/// Gets or sets the properties of the ticket.
-				/// </summary>
 				public HubSpotTicketProperties Properties { get; set; }
 			}
 
@@ -41,24 +29,12 @@
 			/// </summary>
 			public class HubSpotTicketProperties
 			{
-				/// <summary>
-				/// Gets or sets the ID of the ticket.
-				/// </summary>
 				public string Id { get; set; }
 
-				/// <summary>
-				/// Gets or sets the name of the ticket.
-				/// </summary>
 				public string Name { get; set; }
 
-				/// <summary>
-				/// Gets or sets the status of the ticket.
-				/// </summary>
 				public string Status { get; set; }
 
-				/// <summary>
-				/// Gets or sets the priority of the ticket.
-				/// </summary>
 				public string Priority { get; set; }
 
 				/// <summary>
@@ -71,10 +47,13 @@
 				/// </summary>
 				public DateTime SendAt { get; set; }
 
-				/// <summary>
-				/// Gets or sets the pipeline of the ticket.
-				/// </summary>
 				public string Pipeline { get; set; }
+
+				public string LinkIntranet { get; set; }
+
+				public string Category { get; set; }
+
+				public string Services { get; set; }
 			}
 
 			/// <summary>
@@ -82,15 +61,39 @@
 			/// </summary>
 			public class HubSpotChangedProperty
 			{
-				/// <summary>
-				/// Gets or sets the name of the changed property.
-				/// </summary>
 				public string PropertyName { get; set; }
 
-				/// <summary>
-				/// Gets or sets the new value of the changed property.
-				/// </summary>
 				public string NewValue { get; set; }
+			}
+
+			/// <summary>
+			/// Represents the notes of a HubSpot ticket.
+			/// </summary>
+			public class HubSpotTicketNotes
+			{
+				public long EngagementId { get; set; }
+				public string Type { get; set; }
+				public DateTime CreatedAt { get; set; }
+				public DateTime UpdatedAt { get; set; }
+
+				public string Body { get; set; }
+
+				public List<HubSpotTicketNotesAttachment> NotesAttachment { get; set; }
+
+				public HubSpotTicketNotes()
+				{
+					NotesAttachment = new List<HubSpotTicketNotesAttachment>();
+				}
+
+				/// <summary>
+				/// Represents an attachment of a HubSpot ticket note.
+				/// </summary>
+				public class HubSpotTicketNotesAttachment
+				{
+					public long FileId { get; set; }
+					public string FileName { get; set; }
+					public string FileUrl { get; set; }
+				}
 			}
 		}
 	}

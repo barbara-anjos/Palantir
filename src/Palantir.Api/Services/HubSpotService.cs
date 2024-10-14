@@ -9,13 +9,13 @@ using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 public class HubSpotService
 {
     private readonly HttpClient _httpClient;
-    private readonly string _apiToken;
+    private readonly string _apiKey;
 
     public HubSpotService(HttpClient httpClient, IOptions<HubSpotSettings> hubSpotSettings)
     {
         _httpClient = httpClient;
-		_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
-		_apiToken = hubSpotSettings.Value.ApiToken;
+		_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+		_apiKey = hubSpotSettings.Value.ApiKey;
     }
 
     // Método para buscar um tíquete no HubSpot por ID e retornar o modelo HubSpotTicket

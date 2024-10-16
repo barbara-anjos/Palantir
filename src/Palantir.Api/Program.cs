@@ -8,7 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 
 // Carregar as configurações do ClickUp
-    builder.Services.Configure<ClickUpSettings>(builder.Configuration.GetSection("ClickUpSettings"));
+builder.Services.Configure<ClickUpSettings>(builder.Configuration.GetSection("ClickUpSettings"));
+
+// Carregar as configurações do HubSpot
+builder.Services.Configure<HubSpotSettings>(builder.Configuration.GetSection("HubSpotSettings"));
+
+builder.Services.AddControllers();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

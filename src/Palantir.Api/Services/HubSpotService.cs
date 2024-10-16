@@ -5,8 +5,9 @@ using System.Net.Http.Headers;
 using System.Text;
 using Palantir.Api.Configurations;
 using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
+using Palantir.Api.Interfaces;
 
-public class HubSpotService
+public class HubSpotService : ICustomerTicketService<HubSpotTicketProperties>
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;

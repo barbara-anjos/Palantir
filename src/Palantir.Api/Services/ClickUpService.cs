@@ -7,10 +7,11 @@ using Palantir.Api.Configurations;
 using static Palantir.Api.Models.ClickUpTaskModel;
 using Flurl.Http;
 using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
+using Palantir.Api.Interfaces;
 
 namespace Palantir.Api.Services
 {
-    public class ClickUpService
+    public class ClickUpService : IDevelopmentTaskService<HubSpotTicketProperties>
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiToken;

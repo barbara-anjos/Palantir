@@ -1,4 +1,6 @@
-﻿namespace Palantir.Api.Models
+﻿using static Palantir.Api.Models.ClickUpTaskModel;
+
+namespace Palantir.Api.Models
 {
     public class ClickUpTaskModel
     {
@@ -41,6 +43,11 @@
 			public string Status { get; set; }
 			public string Priority { get; set; }
 			public DateTime DueDate { get; set; }
+		}
+
+		public class TaskList
+		{
+			public List<ClickUpTask> Tasks { get; set; }
 		}
 
 	}

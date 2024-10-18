@@ -20,7 +20,7 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketProperties>
     }
 
     // Método para buscar um tíquete no HubSpot por ID e retornar o modelo HubSpotTicket
-    public async Task<HubSpotTicketProperties> GetTicketByIdAsync(string ticketId)
+    public async Task<HubSpotTicketProperties> GetTicketByIdAsync(long ticketId)
     {
         var requestUrl = $"https://api.hubapi.com/crm/v3/objects/tickets/{ticketId}";       
 

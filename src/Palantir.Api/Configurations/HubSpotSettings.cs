@@ -9,5 +9,8 @@ namespace Palantir.Api.Configurations
         public string GestaoPipeline { get; set; }
         public string AutomacaoPipeline { get; set; }
 		public string InfraPipeline { get; set; }
+		public string GestaoNovoStageId { get; set; }
+		public string AutomacaoNovoStageId { get; set; }
+		public string InfraNovoStageId { get; set; }
 	}
 }

@@ -10,7 +10,7 @@
 		/// </summary>
 		public class HubSpotWebhookRequest
 		{
-			public string ObjectId { get; set; }
+			public long ObjectId { get; set; }
 
 			public List<HubSpotChangedProperty> HubSpotChangedProperties { get; set; }
 
@@ -35,7 +35,15 @@
 
 				public string Status { get; set; }
 
+				/// <summary>
+				/// Campo 'Prioridade' no HubSpot
+				/// </summary>
 				public string Priority { get; set; }
+
+				/// <summary>
+				/// Campo 'Prioridade - Segfy' no HubSpot
+				/// </summary> 
+				public string Prioridade { get; set; }
 
 				/// <summary>
 				/// Gets or sets the creation date of the ticket.

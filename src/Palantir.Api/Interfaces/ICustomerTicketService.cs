@@ -3,7 +3,7 @@
 	public interface ICustomerTicketService<T>
 	{
 		//buscar tíquete
-		Task<T> GetTicketByIdAsync(string ticketId);
+		Task<T> GetTicketByIdAsync(long ticketId);
 
 
 		//atualizar tíquete

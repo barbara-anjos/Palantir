@@ -6,7 +6,7 @@ namespace Palantir.Api.Interfaces
 	public interface IDevelopmentTaskService<T>
 	{
 		//criar tarefa
-		Task<bool> CreateTaskFromTicket(T ticketProperties);
+		Task<bool> CreateTaskFromTicket(T ticketProperties, string s);
 
 		//atualizar tarefa
 		//Task UpdateTaskAsync(string taskId, T updatedData);

@@ -1,6 +1,8 @@
 ﻿namespace Palantir.Api.Enums
 {
-	//SLA do tíquete em horas por prioridade
+	/// <summary>
+	/// Priority ticket SLA in hours
+	/// </summary>
 	public enum HubSpotTicketSLA
 	{
 		LOW = 160,

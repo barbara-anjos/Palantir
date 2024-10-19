@@ -19,8 +19,13 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketProperties>
 		_apiKey = hubSpotSettings.Value.ApiKey;
     }
 
-    // Método para buscar um tíquete no HubSpot por ID e retornar o modelo HubSpotTicket
-    public async Task<HubSpotTicketProperties> GetTicketByIdAsync(long ticketId)
+	/// <summary>
+	/// Get a ticket from HubSpot by ID and return the HubSpotTicket model
+	/// </summary>
+	/// <param name="ticketId"></param>
+	/// <returns></returns>
+	/// <exception cref="Exception"></exception>
+	public async Task<HubSpotTicketProperties> GetTicketByIdAsync(long ticketId)
     {
         var requestUrl = $"https://api.hubapi.com/crm/v3/objects/tickets/{ticketId}";       
 
@@ -43,7 +48,7 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketProperties>
             };
         }
 
-        throw new Exception("Erro ao buscar o tíquete no HubSpot.");
+        throw new Exception("Error searching ticket in HubSpot.");
     }
 
     //// Método para atualizar o status de um tíquete no HubSpot

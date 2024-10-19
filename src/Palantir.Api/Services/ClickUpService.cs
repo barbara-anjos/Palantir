@@ -9,6 +9,9 @@ using Flurl.Http;
 using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 using Palantir.Api.Interfaces;
 using System.Net;
+using Palantir.Api.Enums;
+using System.Net.Sockets;
+using Palantir.Api.Utils;
 
 namespace Palantir.Api.Services
 {
@@ -31,62 +34,159 @@ namespace Palantir.Api.Services
 		}
 
 		// Método para criar uma tarefa
-		public async Task<ClickUpTaskResponse> CreateTask(string taskName, string status, List<ClickUpCustomField> customFields)
+		public async Task<ClickUpTaskResponse> CreateTask(ClickUpTask task)
 		{
 			var requestUrl = $"{_baseUrl}/list/{_listId}/task";
 
-			var newTask = new
-			{
-				name = taskName,
-				status = status,
-				custom_fields = customFields,
-				team_id = _teamId
-			};
-
 			var taskResponse = await requestUrl
 				.WithOAuthBearerToken(_apiToken)
-				.PostJsonAsync(newTask)
+				.PostJsonAsync(task)
 				.ReceiveJson<ClickUpTaskResponse>();
 
 			return taskResponse;
 		}
 
 		// Novo método para criar tarefa a partir do tíquete do HubSpot
-		public async Task<bool> CreateTaskFromTicket(HubSpotTicketProperties ticketProperties)
+		public async Task<bool> CreateTaskFromTicket(HubSpotTicketProperties ticket, string ticketPipeline)
 		{
+			var priority = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Priority ?? string.Empty);
+			var prioritySegfy = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.PrioritySegfy ?? string.Empty);
+
+			//Dealing with inverted priorities values, as changing them in HubSpot would be a hassle
+			if (prioritySegfy == HubSpotTicketSLA.LOW)
+				prioritySegfy = HubSpotTicketSLA.HIGH;
+			else if (prioritySegfy == HubSpotTicketSLA.HIGH)
+				prioritySegfy = HubSpotTicketSLA.LOW;
+
+			var timeEstimate = (int)prioritySegfy;
+			var startDate = ticket.SendAt ?? ticket.CreatedAt;
+			var dueDate = startDate.WorkingHours(timeEstimate);
+
+			//Check if the ticket name contains a specific text to set a tag
+			string tagRules = string.Empty;
+			string tagRulesGrupoPorto = string.Empty;
+			string tagRulesGrupoPortoAno = string.Empty;
+			string anoAtual = DateTime.Now.Year.ToString();
+			switch (ticket.Name)
+			{
+				case var t when t.Contains(TicketTagRules.ZERARBASE.ToString()):
+					tagRules = "zerar base";
+					break;
+
+				case var t when t.Contains(TicketTagRules.DEVOLUCAOBASE.ToString()):
+					tagRules = "devolutiva-basededados";
+					break;
+
+				case var t when t.Contains(TicketTagRulesGrupoPorto.PORTO.ToString()):
+					tagRulesGrupoPorto = "porto-tickets";
+					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
+					break;
+
+				case var t when t.Contains(TicketTagRulesGrupoPorto.AZUL.ToString()):
+					tagRulesGrupoPorto = "porto-tickets";
+					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
+					break;
+
+				case var t when t.Contains(TicketTagRulesGrupoPorto.ITAU.ToString()):
+					tagRulesGrupoPorto = "porto-tickets";
+					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
+					break;
+
+				case var t when t.Contains(TicketTagRulesGrupoPorto.MITSUI.ToString()):
+					tagRulesGrupoPorto = "porto-tickets";
+					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
+					break;
+
+				case var t when t.Contains(TicketTagRulesGrupoPorto.AZULPORASSINATURA.ToString()):
+					tagRulesGrupoPorto = "porto-tickets";
+					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
+					break;
+
+				case var t when t.Contains(TicketTagRulesGrupoPorto.BLLU.ToString()):
+					tagRulesGrupoPorto = "porto-tickets";
+					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
+					break;
+			}
+
 			var clickUpTask = new ClickUpTask
 			{
-				Name = ticketProperties.Name,
-				Status = ticketProperties.Status,
-				CustomFields = new List<ClickUpCustomField>
-			{
-				new ClickUpCustomField
+				Name = $"{ticket.Id} - {ticket.Name}",
+				Description = ticket.Content,
+				StartDate = new DateTimeOffset(startDate).ToUnixTimeMilliseconds(),
+				DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),
+				TimeEstimate = timeEstimate,
+				Priority = HubSpotTicketPrioritySLAConstants.PriorityMap[priority],
+				Tags = new List<Tags>
 				{
-					Name = "HubSpot Ticket ID",
-					Value = ticketProperties.Id
+					new Tags
+					{
+						Name = ticketPipeline
+					},
+					new Tags
+					{
+						Name = "ticket"
+					},
+					new Tags
+					{
+						Name = tagRulesGrupoPorto
+					},
+					new Tags
+					{
+						Name = tagRulesGrupoPortoAno
+					},
+					new Tags
+					{
+						Name = tagRules
+					}
 				},
-				new ClickUpCustomField
+				CustomFields = new List<ClickUpCustomField>
 				{
-					Name = "Priority",
-					Value = ticketProperties.Priority
+					new ClickUpCustomField
+					{
+						Id = "471039af-a966-4bb0-aab3-5fd1cb92f014",
+						Value = ticket.Id
+					},
+					new ClickUpCustomField
+					{
+						Id = "4b809840-77df-4f7d-8e9a-8bef1000830e",
+						Value = $"https://app.hubspot.com/contacts/6828248/record/0-5/{ticket.Id}"
+					},
+					new ClickUpCustomField
+					{
+						Id = "", //custom_field Link Intranet
+						Value = ticket.LinkIntranet
+					},
+					new ClickUpCustomField
+					{
+						Id = "", //custom_field Tipo
+						Value = ticket.Category
+					},
+					new ClickUpCustomField
+					{
+						Id = "", //custom_field Funcionalidade
+						Value = ticket.Services
+					},
 				}
-			}
 			};
 
 			try
 			{
-				// Chama o método para criar a tarefa no ClickUp
-				var createdTask = await CreateTask(clickUpTask.Name, clickUpTask.Status, clickUpTask.CustomFields);
+				var createdTask = await CreateTask(clickUpTask);
 				return createdTask != null;
 			}
 			catch (Exception ex)
 			{
+				//Colocar log na aws?
 				Console.WriteLine($"Error creating task in ClickUp: {ex.Message}");
 				return false;
 			}
 		}
 
-		// Método para obter uma tarefa pelo taskID
+		/// <summary>
+		/// Get a task by ID
+		/// </summary>
+		/// <param name="taskId"></param>
+		/// <returns></returns>
 		public async Task<ClickUpTaskResponse> GetTaskById(string taskId)
 		{
 			var requestUrl = $"{_baseUrl}/task/{taskId}";
@@ -98,7 +198,12 @@ namespace Palantir.Api.Services
 			return taskResponse;
 		}
 
-		// Buscar o ID da tarefa associada ao ID do tíquete no HubSpot
+		/// <summary>
+		/// Get the task ID associated with the ticket ID in HubSpot
+		/// </summary>
+		/// <param name="ticketId"></param>
+		/// <returns></returns>
+		/// <exception cref="Exception"></exception>
 		public async Task<TaskList> GetTaskIdByTicketIdAsync(string ticketId)
 		{
 			try

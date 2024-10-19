@@ -20,8 +20,12 @@ public class ClickUpController : ControllerBase
         _clickUpService = clickUpService;
     }
 
-    // Endpoint para criar uma tarefa no ClickUp
-    [HttpPost("task")]
+	/// <summary>
+	/// Endpoint to create a new task in ClickUp
+	/// </summary>
+	/// <param name="newTask"></param>
+	/// <returns></returns>
+	[HttpPost("task")]
     public async Task<IActionResult> CreateTask([FromBody] ClickUpTask newTask)
     {
         if (newTask == null || string.IsNullOrEmpty(newTask.Name))
@@ -29,12 +33,16 @@ public class ClickUpController : ControllerBase
             return BadRequest("Invalid task data.");
         }
 
-        var createdTask = await _clickUpService.CreateTask(newTask.Name, newTask.Status, newTask.CustomFields);
+        var createdTask = await _clickUpService.CreateTask(newTask);
         return CreatedAtAction(nameof(GetTask), new { id = createdTask.Id }, createdTask);
     }
 
-    // Endpoint para obter uma tarefa por ID
-    [HttpGet("task/{id}")]
+	/// <summary>
+	/// Endpoint to get a task by ID
+	/// </summary>
+	/// <param name="id"></param>
+	/// <returns></returns>
+	[HttpGet("task/{id}")]
     public async Task<IActionResult> GetTask(string id)
     {
         var task = await _clickUpService.GetTaskById(id);

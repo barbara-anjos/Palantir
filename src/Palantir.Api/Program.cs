@@ -13,8 +13,6 @@ builder.Services.Configure<ClickUpSettings>(builder.Configuration.GetSection("Cl
 // Carregar as configurações do HubSpot
 builder.Services.Configure<HubSpotSettings>(builder.Configuration.GetSection("HubSpotSettings"));
 
-builder.Services.AddControllers();
-
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

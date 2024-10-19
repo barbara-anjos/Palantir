@@ -5,6 +5,7 @@ using Palantir.Api.Configurations;
 using Palantir.Api.Enums;
 using Palantir.Api.Models;
 using Palantir.Api.Services;
+using Palantir.Api.Utils;
 using System.Net.Sockets;
 using static Palantir.Api.Models.HubSpotTicketModel;
 
@@ -35,7 +36,11 @@ public class HubSpotController : ControllerBase
 		_statusNovoAutomacao = hubSpotSettings.Value.AutomacaoNovoStageId;
 		_statusNovoInfra = hubSpotSettings.Value.InfraNovoStageId;
 	}
-
+	/// <summary>
+	/// Create a task in ClickUp from a ticket in HubSpot
+	/// </summary>
+	/// <param name="notifications"></param>
+	/// <returns></returns>
 	[HttpPost("ticket")]
 	public async Task<IActionResult> CreateTaskFromTicket([FromBody] List<HubSpotNotification> notifications)
 	{
@@ -43,7 +48,7 @@ public class HubSpotController : ControllerBase
 
 		foreach (var notification in notifications)
 		{
-			//Tratando envio do mesmo tíquete em mais de uma notificação: create ou update
+			//Dealing with the same ticket in more than one notification: create or update
 			if (!Lock(notification.ObjectId))
 				continue;
 
@@ -55,77 +60,32 @@ public class HubSpotController : ControllerBase
 				var eventType = !string.IsNullOrEmpty(notification.SubscriptionType) ? notification.SubscriptionType : notification.EventType;
 
 				if (eventType != "ticket.creation" && eventType != "ticket.propertyChange")
-					throw new Exception("Somente processa notificações de criação de tíquetes.");
+					throw new Exception("Only processes ticket creation notifications.");
 
-				// Obter detalhes do tíquete criado
+				//Get created ticket details
 				var ticket = await _hubSpotService.GetTicketByIdAsync(notification.ObjectId);
 				if (ticket == null)
-					return NotFound("Ticket não encontrado ou inválido.");
+					return NotFound("Ticket not found or invalid.");
 
-				// Verificar se o tíquete está na pipeline e status desejados
-				//puxar do appsettings.json
-				string specificPipeline = "desired-pipeline-id";  // ID da pipeline desejada
-				string specificStatus = "desired-status";         // Status desejado
+				//Check the status to create the task
+				if (ticket.Status != _statusNovoGestao && ticket.Status != _statusNovoAutomacao && ticket.Status != _statusNovoInfra)
+					throw new Exception("Ticket status different than expected: Novo.");
 
-				var hs_priority = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Priority ?? string.Empty);
-				var prioridade = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Prioridade ?? string.Empty);
-
-				// Tratando a inversão dos valores aqui, pois alterar no Hubspost geraria um caos generelizado.
-				if (prioridade == HubSpotTicketSLA.LOW)
-				{
-					prioridade = HubSpotTicketSLA.HIGH;
-				}
-				else if (prioridade == HubSpotTicketSLA.HIGH)
-				{
-					prioridade = HubSpotTicketSLA.LOW;
-				}
-
-				var prioridadeMaior = (int)hs_priority > (int)prioridade ? hs_priority : prioridade;
-				//string pipeline;
-
-				//Valida a pipeline para criar a task e adicionar a tag
-				switch (ticket.Pipeline)
-				{
-					case var pipeline when pipeline == _pipelineGestao:
-						pipeline = "Gestão";
-						break;
-					case var pipeline when pipeline == _pipelineAutomacao:
-						pipeline = "Automação";
-						break;
-					case var pipeline when pipeline == _pipelineInfra:
-						pipeline = "Infra";
-						break;
-					default:
-						throw new Exception("Pipeline do tíquete diferente da esperada: Gestão, Automação ou Infra.");
-
-				}
-
-				//Valida o status para criar a task
-				if (ticket.Status != _statusNovoGestao && ticket.Status != _statusNovoAutomacao && ticket.Status != _statusNovoInfra) 
-					throw new Exception("Status do tíquete diferente do esperado: Novo.");
-
-				//Valida se a task já não foi criada
+				//Check if the task already exists
 				var existTask = await _clickUpService.GetTaskIdByTicketIdAsync(ticket.Id);
 				if (existTask != null && existTask.Tasks.Count > 0)
-					throw new Exception("Task já criada.");
+					throw new Exception("Task alredy created.");
 
-				#region Propriedades da Task
-
-
-
-				#endregion
-
-				if (ticket.Pipeline == specificPipeline &&
-					ticket.Status == specificStatus)
+				//Only create the task if the ticket is in the expected pipeline and status
+				if ((ticket.Pipeline == _pipelineGestao && ticket.Status == _statusNovoGestao)
+					|| (ticket.Pipeline == _pipelineAutomacao && ticket.Status == _statusNovoAutomacao)
+					|| (ticket.Pipeline == _pipelineInfra && ticket.Status == _statusNovoInfra))
 				{
-					// Chama o serviço para processar o webhook e criar a tarefa no ClickUp
-					var task = await _clickUpService.CreateTaskFromTicket(ticket);
-
+					var task = await _clickUpService.CreateTaskFromTicket(ticket, ticket.Pipeline);
 					return task ? Ok("Task created successfully in ClickUp.") : StatusCode(500, "Failed to create task in ClickUp.");
 				}
-
-				// Se o tíquete não estiver na pipeline ou status desejados, não faz nada
-				return Ok("Ticket does not meet the conditions for creating a task.");
+				else
+					return Ok("Ticket does not meet the conditions for creating a task.");
 			}
 			catch (Exception ex)
 			{
@@ -140,7 +100,7 @@ public class HubSpotController : ControllerBase
 		return Ok(results);
 	}
 
-	#region LockList das Notificações
+	#region Notifications LockList
 
 	private bool Lock(long ticketId)
 	{

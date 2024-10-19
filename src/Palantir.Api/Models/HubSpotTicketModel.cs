@@ -36,14 +36,14 @@
 				public string Status { get; set; }
 
 				/// <summary>
-				/// Campo 'Prioridade' no HubSpot
+				/// Property 'Prioridade' in HubSpot
 				/// </summary>
 				public string Priority { get; set; }
 
 				/// <summary>
-				/// Campo 'Prioridade - Segfy' no HubSpot
+				/// Property 'Prioridade - Segfy' in HubSpot
 				/// </summary> 
-				public string Prioridade { get; set; }
+				public string PrioritySegfy { get; set; }
 
 				/// <summary>
 				/// Gets or sets the creation date of the ticket.
@@ -51,9 +51,9 @@
 				public DateTime CreatedAt { get; set; }
 
 				/// <summary>
-				/// Gets or sets the send date of the ticket.
+				/// Gets or sets the 'data_envio_dev' property of the ticket.
 				/// </summary>
-				public DateTime SendAt { get; set; }
+				public DateTime? SendAt { get; set; }
 
 				public string Pipeline { get; set; }
 
@@ -62,6 +62,11 @@
 				public string Category { get; set; }
 
 				public string Services { get; set; }
+
+				/// <summary>
+				/// Property 'Descrição do ticket' in HubSpot
+				/// </summary>
+				public string Content { get; set; }
 			}
 
 			/// <summary>

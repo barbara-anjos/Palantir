@@ -18,13 +18,24 @@ namespace Palantir.Api.Models
         {
             public string Id { get; set; }
             public string Name { get; set; }
-            public string Status { get; set; }
-            public List<ClickUpCustomField> CustomFields { get; set; }
+			public string Description { get; set; }
+            public long StartDate { get; set; }
+			public long DueDate { get; set; }
+            public long TimeEstimate { get; set; }
+            public int Priority { get; set; }
+            public List<Tags> Tags { get; set; }
+			public List<ClickUpCustomField> CustomFields { get; set; }
         }
 
-        public class ClickUpCustomField
+		public class Tags
+		{
+			public string Name { get; set; }
+		}
+
+
+		public class ClickUpCustomField
         {
-            public string Name { get; set; }
+            public string Id { get; set; }
             public string Value { get; set; }
         }
 

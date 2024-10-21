@@ -36,6 +36,7 @@ public class HubSpotController : ControllerBase
 		_statusNovoAutomacao = hubSpotSettings.Value.AutomacaoNovoStageId;
 		_statusNovoInfra = hubSpotSettings.Value.InfraNovoStageId;
 	}
+
 	/// <summary>
 	/// Create a task in ClickUp from a ticket in HubSpot
 	/// </summary>
@@ -76,12 +77,29 @@ public class HubSpotController : ControllerBase
 				if (existTask != null && existTask.Tasks.Count > 0)
 					throw new Exception("Task alredy created.");
 
-				//Only create the task if the ticket is in the expected pipeline and status
-				if ((ticket.Pipeline == _pipelineGestao && ticket.Status == _statusNovoGestao)
+                //Check the ticket pipeline to create the task with the correct pipeline tag
+                var ticketPipeline = ticket.Pipeline;
+                switch (ticketPipeline)
+				{
+					case var t when t == _pipelineGestao:
+                        ticketPipeline = "Gestão";
+                        break;
+
+                    case var t when t == _pipelineAutomacao:
+                        ticketPipeline = "Automação";
+                        break;
+
+                    case var t when t == _pipelineInfra:
+                        ticketPipeline = "Infra";
+                        break;
+                }
+
+                //Only create the task if the ticket is in the expected pipeline and status
+                if ((ticket.Pipeline == _pipelineGestao && ticket.Status == _statusNovoGestao)
 					|| (ticket.Pipeline == _pipelineAutomacao && ticket.Status == _statusNovoAutomacao)
 					|| (ticket.Pipeline == _pipelineInfra && ticket.Status == _statusNovoInfra))
 				{
-					var task = await _clickUpService.CreateTaskFromTicket(ticket, ticket.Pipeline);
+					var task = await _clickUpService.CreateTaskFromTicket(ticket, ticketPipeline);
 					return task ? Ok("Task created successfully in ClickUp.") : StatusCode(500, "Failed to create task in ClickUp.");
 				}
 				else

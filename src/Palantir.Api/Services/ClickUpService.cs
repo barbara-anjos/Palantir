@@ -1,8 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using static Palantir.Api.Models.HubSpotTicketModel;
-using System.Net.Http.Headers;
-using System.Text;
 using Palantir.Api.Configurations;
 using static Palantir.Api.Models.ClickUpTaskModel;
 using Flurl.Http;
@@ -10,7 +7,6 @@ using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 using Palantir.Api.Interfaces;
 using System.Net;
 using Palantir.Api.Enums;
-using System.Net.Sockets;
 using Palantir.Api.Utils;
 
 namespace Palantir.Api.Services
@@ -33,8 +29,12 @@ namespace Palantir.Api.Services
 			_teamId = clickUpSettings.Value.TeamId;
 		}
 
-		// Método para criar uma tarefa
-		public async Task<ClickUpTaskResponse> CreateTask(ClickUpTask task)
+        /// <summary>
+        /// Create a task
+        /// </summary>
+        /// <param name="task"></param>
+        /// <returns></returns>
+        public async Task<ClickUpTaskResponse> CreateTask(ClickUpTask task)
 		{
 			var requestUrl = $"{_baseUrl}/list/{_listId}/task";
 
@@ -46,8 +46,13 @@ namespace Palantir.Api.Services
 			return taskResponse;
 		}
 
-		// Novo método para criar tarefa a partir do tíquete do HubSpot
-		public async Task<bool> CreateTaskFromTicket(HubSpotTicketProperties ticket, string ticketPipeline)
+        /// <summary>
+        /// Create a task in ClickUp from a ticket in HubSpot
+        /// </summary>
+        /// <param name="ticket"></param>
+        /// <param name="ticketPipeline"></param>
+        /// <returns></returns>
+        public async Task<bool> CreateTaskFromTicket(HubSpotTicketProperties ticket, string ticketPipeline)
 		{
 			var priority = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Priority ?? string.Empty);
 			var prioritySegfy = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.PrioritySegfy ?? string.Empty);
@@ -62,8 +67,8 @@ namespace Palantir.Api.Services
 			var startDate = ticket.SendAt ?? ticket.CreatedAt;
 			var dueDate = startDate.WorkingHours(timeEstimate);
 
-			//Check if the ticket name contains a specific text to set a tag
-			string tagRules = string.Empty;
+            //Check if the ticket is about 'Zerar Base', 'Devolução de base' or some company from 'Grupo Porto' to set a tag. Use the ticket name to identify it.
+            string tagRules = string.Empty;
 			string tagRulesGrupoPorto = string.Empty;
 			string tagRulesGrupoPortoAno = string.Empty;
 			string anoAtual = DateTime.Now.Year.ToString();
@@ -77,32 +82,12 @@ namespace Palantir.Api.Services
 					tagRules = "devolutiva-basededados";
 					break;
 
-				case var t when t.Contains(TicketTagRulesGrupoPorto.PORTO.ToString()):
-					tagRulesGrupoPorto = "porto-tickets";
-					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
-					break;
-
-				case var t when t.Contains(TicketTagRulesGrupoPorto.AZUL.ToString()):
-					tagRulesGrupoPorto = "porto-tickets";
-					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
-					break;
-
-				case var t when t.Contains(TicketTagRulesGrupoPorto.ITAU.ToString()):
-					tagRulesGrupoPorto = "porto-tickets";
-					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
-					break;
-
-				case var t when t.Contains(TicketTagRulesGrupoPorto.MITSUI.ToString()):
-					tagRulesGrupoPorto = "porto-tickets";
-					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
-					break;
-
-				case var t when t.Contains(TicketTagRulesGrupoPorto.AZULPORASSINATURA.ToString()):
-					tagRulesGrupoPorto = "porto-tickets";
-					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
-					break;
-
-				case var t when t.Contains(TicketTagRulesGrupoPorto.BLLU.ToString()):
+				case var p when p.Contains(TicketTagRulesGrupoPorto.PORTO.ToString()):
+				case var a when a.Contains(TicketTagRulesGrupoPorto.AZUL.ToString()):
+				case var i when i.Contains(TicketTagRulesGrupoPorto.ITAU.ToString()):
+				case var m when m.Contains(TicketTagRulesGrupoPorto.MITSUI.ToString()):
+				case var apa when apa.Contains(TicketTagRulesGrupoPorto.AZULPORASSINATURA.ToString()):
+				case var b when b.Contains(TicketTagRulesGrupoPorto.BLLU.ToString()):
 					tagRulesGrupoPorto = "porto-tickets";
 					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
 					break;
@@ -221,7 +206,7 @@ namespace Palantir.Api.Services
 			catch (Exception ex)
 			{
 
-				throw new Exception("Tarefa correspondente não encontrada.");
+				throw new Exception($"Task not found: {ex.Message}.");
 			}
 		}
 

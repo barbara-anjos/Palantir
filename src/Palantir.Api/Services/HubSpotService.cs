@@ -36,7 +36,7 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketProperties>
             var content = await response.Content.ReadAsStringAsync();
             var ticketData = JsonConvert.DeserializeObject<HubSpotTicketResponse>(content);
 
-            // Mapeia a resposta da API para o modelo HubSpotTicket
+            //Maps the ticket data to the HubSpotTicketProperties model
             return new HubSpotTicketProperties
             {
                 Id = ticketData.Id,
@@ -44,7 +44,13 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketProperties>
                 Status = ticketData.Properties.Status,
                 Priority = ticketData.Properties.Priority,
                 CreatedAt = ticketData.Properties.CreatedAt,
-                SendAt = ticketData.Properties.SendAt
+                SendAt = ticketData.Properties.SendAt,
+                Services = ticketData.Properties.Services,
+                Pipeline = ticketData.Properties.Pipeline,
+                LinkIntranet = ticketData.Properties.LinkIntranet,
+                PrioritySegfy = ticketData.Properties.PrioritySegfy,
+                Category = ticketData.Properties.Category,
+                Content = ticketData.Properties.Content
             };
         }
 

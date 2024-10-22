@@ -66,7 +66,7 @@ namespace Palantir.Api.Services
 
 			var timeEstimate = (int)prioritySegfy;
 			var startDate = ticket.SendAt ?? ticket.CreatedAt;
-			var dueDate = startDate.WorkingHours(timeEstimate);            
+			var dueDate = startDate.WorkingHours(timeEstimate);
 
 			var clickUpTask = new ClickUpTask
 			{
@@ -81,27 +81,27 @@ namespace Palantir.Api.Services
 				{
 					new ClickUpCustomField
 					{
-						Id = "471039af-a966-4bb0-aab3-5fd1cb92f014", //TicketId
+						Id = CustomFieldsClickUp.ticketId,
 						Value = ticket.Id
 					},
 					new ClickUpCustomField
 					{
-						Id = "4b809840-77df-4f7d-8e9a-8bef1000830e", //Link HubSpot
+						Id = CustomFieldsClickUp.linkHubSpot,
 						Value = $"https://app.hubspot.com/contacts/6828248/record/0-5/{ticket.Id}"
 					},
 					new ClickUpCustomField
 					{
-						Id = "23a17861-33b0-476a-8ba0-981f3430ea3a", //URL da assinatura da Intranet
+						Id = CustomFieldsClickUp.urlIntranet,
 						Value = ticket.LinkIntranet
 					},
 					new ClickUpCustomField
 					{
-						Id = "81250100-87b4-4174-8aad-0e699b856600", //Tipo
+						Id = CustomFieldsClickUp.tipo,
 						Value = ticket.Category
 					},
 					new ClickUpCustomField
 					{
-						Id = "3a672cc9-e65d-4162-8e30-9db1c52d5763", //Funcionalidade
+						Id = CustomFieldsClickUp.funcionalidade,
 						Value = ticket.Services
 					},
 				}

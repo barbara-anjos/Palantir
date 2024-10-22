@@ -8,10 +8,11 @@ using Palantir.Api.Interfaces;
 using System.Net;
 using Palantir.Api.Enums;
 using Palantir.Api.Utils;
+using Palantir.Api.Utils.Const;
 
 namespace Palantir.Api.Services
 {
-	public class ClickUpService : IDevelopmentTaskService<HubSpotTicketProperties>
+    public class ClickUpService : IDevelopmentTaskService<HubSpotTicketProperties, TaskList>
 	{
 		private readonly HttpClient _httpClient;
 		private readonly string _apiToken;
@@ -36,7 +37,7 @@ namespace Palantir.Api.Services
         /// <returns></returns>
         public async Task<ClickUpTaskResponse> CreateTask(ClickUpTask task)
 		{
-			var requestUrl = $"{_baseUrl}/list/{_listId}/task";
+			var requestUrl = $"{_baseUrl}/list/{_listId}/task?custom_task_ids=true&team_id={_teamId}";
 
 			var taskResponse = await requestUrl
 				.WithOAuthBearerToken(_apiToken)
@@ -65,33 +66,7 @@ namespace Palantir.Api.Services
 
 			var timeEstimate = (int)prioritySegfy;
 			var startDate = ticket.SendAt ?? ticket.CreatedAt;
-			var dueDate = startDate.WorkingHours(timeEstimate);
-
-            //Check if the ticket is about 'Zerar Base', 'Devolução de base' or some company from 'Grupo Porto' to set a tag. Use the ticket name to identify it.
-            string tagRules = string.Empty;
-			string tagRulesGrupoPorto = string.Empty;
-			string tagRulesGrupoPortoAno = string.Empty;
-			string anoAtual = DateTime.Now.Year.ToString();
-			switch (ticket.Name)
-			{
-				case var t when t.Contains(TicketTagRules.ZERARBASE.ToString()):
-					tagRules = "zerar base";
-					break;
-
-				case var t when t.Contains(TicketTagRules.DEVOLUCAOBASE.ToString()):
-					tagRules = "devolutiva-basededados";
-					break;
-
-				case var p when p.Contains(TicketTagRulesGrupoPorto.PORTO.ToString()):
-				case var a when a.Contains(TicketTagRulesGrupoPorto.AZUL.ToString()):
-				case var i when i.Contains(TicketTagRulesGrupoPorto.ITAU.ToString()):
-				case var m when m.Contains(TicketTagRulesGrupoPorto.MITSUI.ToString()):
-				case var apa when apa.Contains(TicketTagRulesGrupoPorto.AZULPORASSINATURA.ToString()):
-				case var b when b.Contains(TicketTagRulesGrupoPorto.BLLU.ToString()):
-					tagRulesGrupoPorto = "porto-tickets";
-					tagRulesGrupoPortoAno = $"porto-{anoAtual}";
-					break;
-			}
+			var dueDate = startDate.WorkingHours(timeEstimate);            
 
 			var clickUpTask = new ClickUpTask
 			{
@@ -101,70 +76,75 @@ namespace Palantir.Api.Services
 				DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),
 				TimeEstimate = timeEstimate,
 				Priority = HubSpotTicketPrioritySLAConstants.PriorityMap[priority],
-				Tags = new List<Tags>
-				{
-					new Tags
-					{
-						Name = ticketPipeline
-					},
-					new Tags
-					{
-						Name = "ticket"
-					},
-					new Tags
-					{
-						Name = tagRulesGrupoPorto
-					},
-					new Tags
-					{
-						Name = tagRulesGrupoPortoAno
-					},
-					new Tags
-					{
-						Name = tagRules
-					}
-				},
+				Tags = GetTagsFromTicketName(ticket.Name),
 				CustomFields = new List<ClickUpCustomField>
 				{
 					new ClickUpCustomField
 					{
-						Id = "471039af-a966-4bb0-aab3-5fd1cb92f014",
+						Id = "471039af-a966-4bb0-aab3-5fd1cb92f014", //TicketId
 						Value = ticket.Id
 					},
 					new ClickUpCustomField
 					{
-						Id = "4b809840-77df-4f7d-8e9a-8bef1000830e",
+						Id = "4b809840-77df-4f7d-8e9a-8bef1000830e", //Link HubSpot
 						Value = $"https://app.hubspot.com/contacts/6828248/record/0-5/{ticket.Id}"
 					},
 					new ClickUpCustomField
 					{
-						Id = "", //custom_field Link Intranet
+						Id = "23a17861-33b0-476a-8ba0-981f3430ea3a", //URL da assinatura da Intranet
 						Value = ticket.LinkIntranet
 					},
 					new ClickUpCustomField
 					{
-						Id = "", //custom_field Tipo
+						Id = "81250100-87b4-4174-8aad-0e699b856600", //Tipo
 						Value = ticket.Category
 					},
 					new ClickUpCustomField
 					{
-						Id = "", //custom_field Funcionalidade
+						Id = "3a672cc9-e65d-4162-8e30-9db1c52d5763", //Funcionalidade
 						Value = ticket.Services
 					},
 				}
 			};
 
-			try
-			{
+			
 				var createdTask = await CreateTask(clickUpTask);
 				return createdTask != null;
-			}
-			catch (Exception ex)
+		}
+
+		/// <summary>
+		/// Checks the ticket name and returns the tags to be added to the task
+		/// </summary>
+		/// <param name="ticketName"></param>
+		/// <returns></returns>
+		private List<Tags> GetTagsFromTicketName(string ticketName)
+		{
+			var tags = new List<Tags>();
+			string ticketNameLower = ticketName.ToLower();
+			string anoAtual = DateTime.Now.Year.ToString();
+
+			if (ticketNameLower.Contains(TicketTagRulesDictionary.ZERARBASE))
 			{
-				//Colocar log na aws?
-				Console.WriteLine($"Error creating task in ClickUp: {ex.Message}");
-				return false;
+				tags.Add(new Tags { Name = "zerar base" });
 			}
+			else if (ticketNameLower.Contains(TicketTagRulesDictionary.DEVOLUCAOBASE))
+			{
+				tags.Add(new Tags { Name = "devolutiva-basededados" });
+			}
+			else if (ticketNameLower.Contains(TicketTagRulesDictionary.PORTO)
+				|| ticketNameLower.Contains(TicketTagRulesDictionary.AZUL)
+				|| ticketNameLower.Contains(TicketTagRulesDictionary.AZULPORASSINATURA)
+				|| ticketNameLower.Contains(TicketTagRulesDictionary.BLLU)
+				|| ticketNameLower.Contains(TicketTagRulesDictionary.ITAU)
+				|| ticketNameLower.Contains(TicketTagRulesDictionary.MITSUI))
+			{
+				tags.Add(new Tags { Name = "porto-tickets" });
+				tags.Add(new Tags { Name = $"porto-{anoAtual}" });
+			}
+
+			tags.Add(new Tags { Name = "ticket" });
+
+			return tags;
 		}
 
 		/// <summary>

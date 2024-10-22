@@ -3,18 +3,21 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Palantir.Api.Configurations;
 using Palantir.Api.Enums;
+using Palantir.Api.Interfaces;
 using Palantir.Api.Models;
 using Palantir.Api.Services;
 using Palantir.Api.Utils;
 using System.Net.Sockets;
+using static Palantir.Api.Models.ClickUpTaskModel;
 using static Palantir.Api.Models.HubSpotTicketModel;
+using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 
 [ApiController]
 [Route("api/hubspot")]
 public class HubSpotController : ControllerBase
 {
 	private readonly string _hubSpotApiKey;
-	private readonly ClickUpService _clickUpService;
+	private readonly IDevelopmentTaskService<HubSpotTicketProperties, TaskList> _clickUpService;
 	private readonly HubSpotService _hubSpotService;
 	private List<long> lockList;
 	private readonly string _pipelineGestao;
@@ -24,7 +27,7 @@ public class HubSpotController : ControllerBase
 	private readonly string _statusNovoAutomacao;
 	private readonly string _statusNovoInfra;
 
-	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, ClickUpService clickUpService)
+	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, IDevelopmentTaskService<HubSpotTicketProperties, TaskList> clickUpService)
 	{
 		_hubSpotApiKey = hubSpotSettings.Value.ApiKey;
 		_clickUpService = clickUpService;
@@ -107,6 +110,7 @@ public class HubSpotController : ControllerBase
 			}
 			catch (Exception ex)
 			{
+				//colocar na aws
 				result.Message = ex.Message;
 			}
 			finally

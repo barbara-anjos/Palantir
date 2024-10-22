@@ -11,13 +11,17 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketProperties>
 {
     private readonly HttpClient _httpClient;
     private readonly string _apiKey;
+    private readonly string _baseUrl;
+    private readonly string _propertiesUrl;
 
-    public HubSpotService(HttpClient httpClient, IOptions<HubSpotSettings> hubSpotSettings)
+	public HubSpotService(HttpClient httpClient, IOptions<HubSpotSettings> hubSpotSettings)
     {
         _httpClient = httpClient;
 		_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 		_apiKey = hubSpotSettings.Value.ApiKey;
-    }
+		_baseUrl = hubSpotSettings.Value.BaseUrl;
+		_propertiesUrl = hubSpotSettings.Value.PropertiesUrl;
+	}
 
 	/// <summary>
 	/// Get a ticket from HubSpot by ID and return the HubSpotTicket model
@@ -27,7 +31,7 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketProperties>
 	/// <exception cref="Exception"></exception>
 	public async Task<HubSpotTicketProperties> GetTicketByIdAsync(long ticketId)
     {
-        var requestUrl = $"https://api.hubapi.com/crm/v3/objects/tickets/{ticketId}";       
+        var requestUrl = $"{_baseUrl}/{ticketId}/{_propertiesUrl}";       
 
         var response = await _httpClient.GetAsync(requestUrl);
 
@@ -60,7 +64,7 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketProperties>
     //// Método para atualizar o status de um tíquete no HubSpot
     //public async Task UpdateTicketStatusAsync(string ticketId, string newStatus)
     //{
-    //    var requestUrl = $"https://api.hubapi.com/crm/v3/objects/tickets/{ticketId}";
+    //    var requestUrl = $"{_baseUrl}/{ticketId}";
     //    var data = new
     //    {
     //        properties = new

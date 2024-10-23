@@ -7,6 +7,7 @@ using Palantir.Api.Interfaces;
 using Palantir.Api.Models;
 using Palantir.Api.Services;
 using Palantir.Api.Utils;
+using System.Diagnostics.Eventing.Reader;
 using System.Net.Sockets;
 using static Palantir.Api.Models.ClickUpTaskModel;
 using static Palantir.Api.Models.HubSpotTicketModel;
@@ -17,8 +18,8 @@ using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 public class HubSpotController : ControllerBase
 {
 	private readonly string _hubSpotApiKey;
-	private readonly IDevelopmentTaskService<HubSpotTicketProperties, TaskList> _clickUpService;
-	private readonly HubSpotService _hubSpotService;
+	private readonly IDevelopmentTaskService<HubSpotTicketResponse, TaskList> _clickUpService;
+	private readonly ICustomerTicketService<HubSpotTicketResponse> _hubSpotService;
 	private List<long> lockList;
 	private readonly string _pipelineGestao;
 	private readonly string _pipelineAutomacao;
@@ -27,10 +28,11 @@ public class HubSpotController : ControllerBase
 	private readonly string _statusNovoAutomacao;
 	private readonly string _statusNovoInfra;
 
-	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, IDevelopmentTaskService<HubSpotTicketProperties, TaskList> clickUpService)
+	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, IDevelopmentTaskService<HubSpotTicketResponse, TaskList> clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
 	{
 		_hubSpotApiKey = hubSpotSettings.Value.ApiKey;
 		_clickUpService = clickUpService;
+		_hubSpotService = hubSpotService;
 		lockList = new List<long>();
 		_pipelineGestao = hubSpotSettings.Value.GestaoPipeline;
 		_pipelineAutomacao = hubSpotSettings.Value.AutomacaoPipeline;
@@ -72,7 +74,8 @@ public class HubSpotController : ControllerBase
 					return NotFound("Ticket not found or invalid.");
 
 				//Check the status to create the task
-				if (ticket.Status != _statusNovoGestao && ticket.Status != _statusNovoAutomacao && ticket.Status != _statusNovoInfra)
+				var ticketStatus = ticket.Properties.Status;
+				if (ticketStatus != _statusNovoGestao && ticketStatus != _statusNovoAutomacao && ticketStatus != _statusNovoInfra)
 					throw new Exception("Ticket status different than expected: Novo.");
 
 				//Check if the task already exists
@@ -81,26 +84,18 @@ public class HubSpotController : ControllerBase
 					throw new Exception("Task alredy created.");
 
                 //Check the ticket pipeline to create the task with the correct pipeline tag
-                var ticketPipeline = ticket.Pipeline;
-                switch (ticketPipeline)
-				{
-					case var t when t == _pipelineGestao:
-                        ticketPipeline = "Gestão";
-                        break;
-
-                    case var t when t == _pipelineAutomacao:
-                        ticketPipeline = "Automação";
-                        break;
-
-                    case var t when t == _pipelineInfra:
-                        ticketPipeline = "Infra";
-                        break;
-                }
+                var ticketPipeline = ticket.Properties.Pipeline;
+				if(ticketPipeline == _pipelineGestao)
+					ticketPipeline = "Gestão";
+				if(ticketPipeline == _pipelineAutomacao)
+					ticketPipeline = "Automação";
+				if (ticketPipeline == _pipelineInfra)
+					ticketPipeline = "Infra";
 
                 //Only create the task if the ticket is in the expected pipeline and status
-                if ((ticket.Pipeline == _pipelineGestao && ticket.Status == _statusNovoGestao)
-					|| (ticket.Pipeline == _pipelineAutomacao && ticket.Status == _statusNovoAutomacao)
-					|| (ticket.Pipeline == _pipelineInfra && ticket.Status == _statusNovoInfra))
+                if ((ticketPipeline == _pipelineGestao && ticketStatus == _statusNovoGestao)
+					|| (ticketPipeline == _pipelineAutomacao && ticketStatus == _statusNovoAutomacao)
+					|| (ticketPipeline == _pipelineInfra && ticketStatus == _statusNovoInfra))
 				{
 					var task = await _clickUpService.CreateTaskFromTicket(ticket, ticketPipeline);
 					return task ? Ok("Task created successfully in ClickUp.") : StatusCode(500, "Failed to create task in ClickUp.");
@@ -147,6 +142,24 @@ public class HubSpotController : ControllerBase
 	}
 
 	#endregion
+
+	[HttpGet("{ticketId}")]
+	public async Task<IActionResult> GetTicket(long ticketId)
+	{
+		try
+		{
+			var ticket = await _hubSpotService.GetTicketByIdAsync(ticketId);
+
+			if (ticket == null)
+				return NotFound();
+
+			return Ok(ticket);
+		}
+		catch (Exception ex)
+		{
+			throw new Exception($"Error searching ticket in HubSpot: {ex.Message}");
+		}
+	}
 
 	////Atualizar tarefa no ClickUp com base em alterações do tíquete
 	//[HttpPost("update-task-from-ticket")]

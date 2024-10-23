@@ -12,7 +12,7 @@ using Palantir.Api.Utils.Const;
 
 namespace Palantir.Api.Services
 {
-    public class ClickUpService : IDevelopmentTaskService<HubSpotTicketProperties, TaskList>
+    public class ClickUpService : IDevelopmentTaskService<HubSpotTicketResponse, TaskList>
 	{
 		private readonly HttpClient _httpClient;
 		private readonly string _apiToken;
@@ -53,10 +53,10 @@ namespace Palantir.Api.Services
         /// <param name="ticket"></param>
         /// <param name="ticketPipeline"></param>
         /// <returns></returns>
-        public async Task<bool> CreateTaskFromTicket(HubSpotTicketProperties ticket, string ticketPipeline)
+        public async Task<bool> CreateTaskFromTicket(HubSpotTicketResponse ticket, string ticketPipeline)
 		{
-			var priority = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Priority ?? string.Empty);
-			var prioritySegfy = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.PrioritySegfy ?? string.Empty);
+			var priority = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Properties.Priority ?? string.Empty);
+			var prioritySegfy = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Properties.PrioritySegfy ?? string.Empty);
 
 			//Dealing with inverted priorities values, as changing them in HubSpot would be a hassle
 			if (prioritySegfy == HubSpotTicketSLA.LOW)
@@ -65,18 +65,18 @@ namespace Palantir.Api.Services
 				prioritySegfy = HubSpotTicketSLA.LOW;
 
 			var timeEstimate = (int)prioritySegfy;
-			var startDate = ticket.SendAt ?? ticket.CreatedAt;
+			var startDate = ticket.Properties.SendAt ?? ticket.Properties.CreateDate;
 			var dueDate = startDate.WorkingHours(timeEstimate);
 
 			var clickUpTask = new ClickUpTask
 			{
-				Name = $"{ticket.Id} - {ticket.Name}",
-				Description = ticket.Content,
+				Name = $"{ticket.Id} - {ticket.Properties.Name}",
+				Description = ticket.Properties.Content,
 				StartDate = new DateTimeOffset(startDate).ToUnixTimeMilliseconds(),
 				DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),
 				TimeEstimate = timeEstimate,
 				Priority = HubSpotTicketPrioritySLAConstants.PriorityMap[priority],
-				Tags = GetTagsFromTicketName(ticket.Name),
+				Tags = GetTagsFromTicketName(ticket.Properties.Name),
 				CustomFields = new List<ClickUpCustomField>
 				{
 					new ClickUpCustomField
@@ -92,17 +92,17 @@ namespace Palantir.Api.Services
 					new ClickUpCustomField
 					{
 						Id = CustomFieldsClickUp.urlIntranet,
-						Value = ticket.LinkIntranet
+						Value = ticket.Properties.LinkIntranet
 					},
 					new ClickUpCustomField
 					{
 						Id = CustomFieldsClickUp.tipo,
-						Value = ticket.Category
+						Value = ticket.Properties.Category
 					},
 					new ClickUpCustomField
 					{
 						Id = CustomFieldsClickUp.funcionalidade,
-						Value = ticket.Services
+						Value = ticket.Properties.Services
 					},
 				}
 			};

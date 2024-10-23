@@ -12,11 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<ClickUpSettings>(builder.Configuration.GetSection("ClickUpSettings"));
 builder.Services.Configure<HubSpotSettings>(builder.Configuration.GetSection("HubSpotSettings"));
 
-builder.Services.AddSingleton<IDevelopmentTaskService<HubSpotTicketProperties, TaskList>, ClickUpService>();
-builder.Services.AddSingleton<ICustomerTicketService<HubSpotTicketProperties>, HubSpotService>();
-
-builder.Services.AddHttpClient<ClickUpService>();
-builder.Services.AddHttpClient<HubSpotService>();
+builder.Services.AddHttpClient<IDevelopmentTaskService<HubSpotTicketResponse, TaskList>, ClickUpService>();
+builder.Services.AddHttpClient<ICustomerTicketService<HubSpotTicketResponse>, HubSpotService>();
 
 builder.Services.AddControllers();
 

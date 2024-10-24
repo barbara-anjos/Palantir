@@ -2,18 +2,20 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Palantir.Api.Configurations;
+using Palantir.Api.Interfaces;
 using Palantir.Api.Services;
 using static Palantir.Api.Models.ClickUpTaskModel;
+using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 
 [ApiController]
 [Route("api/clickup")]
 public class ClickUpController : ControllerBase
 {
-    private readonly ClickUpService _clickUpService;
-    private readonly HubSpotService _hubSpotService;
-    private readonly string _clickUpApiToken;
+    private readonly IDevelopmentTaskService<HubSpotTicketResponse, TaskList> _clickUpService;
+	private readonly ICustomerTicketService<HubSpotTicketResponse> _hubSpotService;
+	private readonly string _clickUpApiToken;
 
-    public ClickUpController(IOptions<ClickUpSettings> clickUpSettings, HubSpotService hubSpotService, ClickUpService clickUpService)
+    public ClickUpController(IOptions<ClickUpSettings> clickUpSettings, IDevelopmentTaskService<HubSpotTicketResponse, TaskList> clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
     {
         _hubSpotService = hubSpotService;
         _clickUpApiToken = clickUpSettings.Value.ApiToken;

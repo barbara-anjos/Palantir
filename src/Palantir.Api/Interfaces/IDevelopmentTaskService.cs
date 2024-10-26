@@ -1,20 +1,21 @@
-﻿using static Palantir.Api.Models.ClickUpTaskModel;
+﻿using Palantir.Api.Models;
+using static Palantir.Api.Models.ClickUpTaskModel;
 using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 
 namespace Palantir.Api.Interfaces
 {
-	public interface IDevelopmentTaskService<T, R>
+	public interface IDevelopmentTaskService
 	{
-		Task CreateTask(T newTask);
+		Task<SegfyTask> CreateTask(SegfyTask newTask);
 
 		//criar tarefa
-		Task<bool> CreateTaskFromTicket(T ticketProperties, string s);
+		Task<bool> CreateTaskFromTicket(SegfyTask ticketProperties, string s);
 
 		//atualizar tarefa
 		//Task UpdateTaskAsync(string taskId, T updatedData);
 
 		//buscar tarefa
-		Task<R> GetTaskIdByTicketIdAsync(string ticketId);
+		Task<SegfyTask> GetTaskIdByTicketIdAsync(string ticketId);
 
 		//excluir tarefa
 		//Task DeleteTaskAsync(string taskId);

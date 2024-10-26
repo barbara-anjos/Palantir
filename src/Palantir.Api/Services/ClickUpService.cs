@@ -9,6 +9,7 @@ using System.Net;
 using Palantir.Api.Enums;
 using Palantir.Api.Utils;
 using Palantir.Api.Utils.Const;
+using Palantir.Api.Models;
 
 namespace Palantir.Api.Services
 {
@@ -53,24 +54,11 @@ namespace Palantir.Api.Services
         /// <param name="ticket"></param>
         /// <param name="ticketPipeline"></param>
         /// <returns></returns>
-        public async Task<bool> CreateTaskFromTicket(HubSpotTicketResponse ticket, string ticketPipeline)
-		{
-			var priority = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Properties.Priority ?? string.Empty);
-			var prioritySegfy = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Properties.PrioritySegfy ?? string.Empty);
-
-			//Dealing with inverted priorities values, as changing them in HubSpot would be a hassle
-			if (prioritySegfy == HubSpotTicketSLA.LOW)
-				prioritySegfy = HubSpotTicketSLA.HIGH;
-			else if (prioritySegfy == HubSpotTicketSLA.HIGH)
-				prioritySegfy = HubSpotTicketSLA.LOW;
-
-			var timeEstimate = (int)prioritySegfy;
-			var startDate = ticket.Properties.SendAt ?? ticket.Properties.CreateDate;
-			var dueDate = startDate.WorkingHours(timeEstimate);
-
+        public async Task<bool> CreateTaskFromTicket(SegfyTask ticket, string ticketPipeline)
+		{			
 			var clickUpTask = new ClickUpTask
 			{
-				Name = $"{ticket.Id} - {ticket.Properties.Name}",
+				Name = $"{ticket.TicketId} - {ticket.Name}",
 				Description = ticket.Properties.Content,
 				StartDate = new DateTimeOffset(startDate).ToUnixTimeMilliseconds(),
 				DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),

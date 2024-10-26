@@ -18,7 +18,7 @@ using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 public class HubSpotController : ControllerBase
 {
 	private readonly string _hubSpotApiKey;
-	private readonly IDevelopmentTaskService<HubSpotTicketResponse, TaskList> _clickUpService;
+	private readonly IDevelopmentTaskService _clickUpService;
 	private readonly ICustomerTicketService<HubSpotTicketResponse> _hubSpotService;
 	private List<long> lockList;
 	private readonly string _pipelineGestao;
@@ -28,7 +28,7 @@ public class HubSpotController : ControllerBase
 	private readonly string _statusNovoAutomacao;
 	private readonly string _statusNovoInfra;
 
-	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, IDevelopmentTaskService<HubSpotTicketResponse, TaskList> clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
+	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
 	{
 		_hubSpotApiKey = hubSpotSettings.Value.ApiKey;
 		_clickUpService = clickUpService;
@@ -80,24 +80,44 @@ public class HubSpotController : ControllerBase
 
 				//Check if the task already exists
 				var existTask = await _clickUpService.GetTaskIdByTicketIdAsync(ticket.Id);
-				if (existTask != null && existTask.Tasks.Count > 0)
+				if (existTask != null)
 					throw new Exception("Task alredy created.");
 
-                //Check the ticket pipeline to create the task with the correct pipeline tag
-                var ticketPipeline = ticket.Properties.Pipeline;
-				if(ticketPipeline == _pipelineGestao)
+				//Check the ticket pipeline to create the task with the correct pipeline tag
+				var ticketPipeline = ticket.Properties.Pipeline;
+				if (ticketPipeline == _pipelineGestao)
 					ticketPipeline = "Gestão";
-				if(ticketPipeline == _pipelineAutomacao)
+				if (ticketPipeline == _pipelineAutomacao)
 					ticketPipeline = "Automação";
 				if (ticketPipeline == _pipelineInfra)
 					ticketPipeline = "Infra";
 
-                //Only create the task if the ticket is in the expected pipeline and status
-                if ((ticketPipeline == _pipelineGestao && ticketStatus == _statusNovoGestao)
+				//Only create the task if the ticket is in the expected pipeline and status
+				if ((ticketPipeline == _pipelineGestao && ticketStatus == _statusNovoGestao)
 					|| (ticketPipeline == _pipelineAutomacao && ticketStatus == _statusNovoAutomacao)
 					|| (ticketPipeline == _pipelineInfra && ticketStatus == _statusNovoInfra))
 				{
-					var task = await _clickUpService.CreateTaskFromTicket(ticket, ticketPipeline);
+					var segfyTask = new SegfyTask()
+					{
+						Name = ticket.Properties.Name,
+						Description = ticket.Properties.Content,
+						//var priority = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Priority ?? string.Empty);
+						//var prioritySegfy = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.PrioritySegfy ?? string.Empty);
+
+						//			//Dealing with inverted priorities values, as changing them in HubSpot would be a hassle
+						//if (prioritySegfy == HubSpotTicketSLA.LOW)
+						//			prioritySegfy = HubSpotTicketSLA.HIGH;
+						//		else if (prioritySegfy == HubSpotTicketSLA.HIGH)
+						//			prioritySegfy = HubSpotTicketSLA.LOW;
+
+						//		var timeEstimate = (int)prioritySegfy;
+						//		var startDate = ticket.Properties.SendAt ?? ticket.Properties.CreateDate;
+						//		var dueDate = startDate.WorkingHours(timeEstimate);
+
+
+						//StartDate = ticket.Properties.SendAt,
+					};
+					var task = await _clickUpService.CreateTaskFromTicket(segfyTask, ticketPipeline);
 					return task ? Ok("Task created successfully in ClickUp.") : StatusCode(500, "Failed to create task in ClickUp.");
 				}
 				else

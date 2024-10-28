@@ -11,7 +11,7 @@ namespace Palantir.Api.Models
             public string WorkspaceId { get; set; }
             public string TeamId { get; set; }
             public DateTime Timestamp { get; set; }
-            public string ObjectId => Task?.Id; // Acessa a ID da tarefa
+            public string ObjectId => Task?.Id;
         }
 
         public class ClickUpTask

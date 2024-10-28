@@ -103,7 +103,7 @@ public class HubSpotController : ControllerBase
                     prioritySegfy = HubSpotTicketSLA.LOW;
 
                 var timeEstimate = (int)prioritySegfy;
-                var startDate = ticket.Properties.SendAt ?? ticket.Properties.CreatedAt;
+                var startDate = ticket.Properties.SendAt ?? ticket.Properties.CreateDate;
                 var dueDate = startDate.WorkingHours(timeEstimate);
 
                 //Only create the task if the ticket is in the expected pipeline and status
@@ -118,9 +118,9 @@ public class HubSpotController : ControllerBase
                         StartDate = new DateTimeOffset(startDate).ToUnixTimeMilliseconds(),
                         DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),
                         TimeEstimate = timeEstimate,
-                        Priority = prioritySegfy
+                        Priority = (int)prioritySegfy
                     };
-                    var task = await _clickUpService.CreateTaskFromTicket(segfyTask);
+                    var task = await _clickUpService.CreateTaskFromTicket(segfyTask, ticketPipeline);
                     return task ? Ok("Task created successfully in ClickUp.") : StatusCode(500, "Failed to create task in ClickUp.");
                 }
                 else
@@ -185,7 +185,7 @@ public class HubSpotController : ControllerBase
     }
 
     ////Atualizar tarefa no ClickUp com base em alterações do tíquete
-    //[HttpPost("update-task-from-ticket")]
+   // [HttpPost]
     //public async Task<IActionResult> UpdateTaskFromHubSpot([FromBody] HubSpotWebhookRequest webhookRequest)
     //{
     //    var ticketId = webhookRequest.ObjectId;

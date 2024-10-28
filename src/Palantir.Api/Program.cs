@@ -13,7 +13,7 @@ builder.Services.AddHttpClient();
 builder.Services.Configure<ClickUpSettings>(builder.Configuration.GetSection("ClickUpSettings"));
 builder.Services.Configure<HubSpotSettings>(builder.Configuration.GetSection("HubSpotSettings"));
 
-builder.Services.AddSingleton<IDevelopmentTaskService<HubSpotTicketResponse, TaskList>, ClickUpService>();
+builder.Services.AddSingleton<IDevelopmentTaskService, ClickUpService>();
 builder.Services.AddSingleton<ICustomerTicketService<HubSpotTicketResponse>, HubSpotService>();
 
 builder.Services.AddControllers();

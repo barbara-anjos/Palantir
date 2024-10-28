@@ -29,7 +29,7 @@ public class ClickUpController : ControllerBase
 	/// <param name="newTask"></param>
 	/// <returns></returns>
 	[HttpPost("task")]
-    public async Task<IActionResult> CreateTask([FromBody] SegfyTask newTask)
+    public async Task<IActionResult> CreateTask([FromBody] ClickUpTask newTask)
     {
         if (newTask == null || string.IsNullOrEmpty(newTask.Name))
         {
@@ -37,7 +37,7 @@ public class ClickUpController : ControllerBase
         }
 
         var createdTask = await _clickUpService.CreateTask(newTask);
-        return CreatedAtAction(nameof(GetTask), new { id = createdTask.TaskId }, createdTask);
+        return CreatedAtAction(nameof(GetTask), new { id = createdTask.Id }, createdTask);
     }
 
 	/// <summary>
@@ -52,15 +52,15 @@ public class ClickUpController : ControllerBase
         return Ok(task);
     }
 
-    //// Webhook do ClickUp: Atualizar status do tíquete no HubSpot quando o status da tarefa for alterado no ClickUp
-    //[HttpPost("update-ticket-from-task")]
-    //public async Task<IActionResult> UpdateTicketFromClickUp([FromBody] ClickUpWebhookRequest webhookRequest)
+    ////// Webhook do ClickUp: Atualizar status do tíquete no HubSpot quando o status da tarefa for alterado no ClickUp
+    //[HttpPost]
+    //public async Task<IActionResult> UpdateTicketFromClickUp([FromBody] ClickUpTaskUpdateData taskUpdate)
     //{
     //    var taskId = webhookRequest.ObjectId;
-    //    var updatedProperties = webhookRequest.ChangedProperties;
+    //    var updatedProperties = webhookRequest;
 
     //    // Buscar o tíquete no HubSpot associado à tarefa no ClickUp
-    //    var hubSpotTicketId = await GetHubSpotTicketIdByTaskId(taskId);
+    //    var hubSpotTicketId = await _hubSpotService.GetTicketByIdAsync(taskId);
 
     //    if (hubSpotTicketId != null)
     //    {

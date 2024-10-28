@@ -36,7 +36,7 @@ namespace Palantir.Api.Services
         /// </summary>
         /// <param name="task"></param>
         /// <returns></returns>
-        public async Task<SegfyTask> CreateTask(ClickUpTask task)
+        public async Task<ClickUpTask> CreateTask(ClickUpTask task)
         {
             var requestUrl = $"{_baseUrl}/list/{_listId}/task?custom_task_ids=true&team_id={_teamId}";
 
@@ -45,20 +45,7 @@ namespace Palantir.Api.Services
                 .PostJsonAsync(task)
                 .ReceiveJson<ClickUpTask>();
 
-            return new SegfyTask
-            {
-                TaskId = taskResponse.Id,
-                Name = taskResponse.Name,
-                Description = taskResponse.Description,
-                StartDate = taskResponse.StartDate,
-                DueDate = taskResponse.DueDate,
-                Priority = taskResponse.Priority.ToString(),
-                Tags = taskResponse.Tags.Select(t => t.Name).ToList(),
-                Services = taskResponse.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.funcionalidade)?.Value,
-                Category = taskResponse.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.tipo)?.Value,
-                LinkIntranet = taskResponse.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.urlIntranet)?.Value,
-                TicketId = taskResponse.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.ticketId)?.Value
-            };
+            return taskResponse;
         }
 
         /// <summary>
@@ -67,7 +54,7 @@ namespace Palantir.Api.Services
         /// <param name="ticket"></param>
         /// <param name="ticketPipeline"></param>
         /// <returns></returns>
-        public async Task<bool> CreateTaskFromTicket(SegfyTask ticket)
+        public async Task<bool> CreateTaskFromTicket(SegfyTask ticket, string s)
         {
             var clickUpTask = new ClickUpTask
             {
@@ -77,7 +64,7 @@ namespace Palantir.Api.Services
                 DueDate = ticket.DueDate,
                 TimeEstimate = ticket.TimeEstimate,
                 Priority = ticket.Priority,
-                Tags = GetTagsFromTicketName(ticket.Name),
+                Tags = GetTagsFromTicketName(ticket.Name, ticket.Pipeline),
                 CustomFields = new List<ClickUpCustomField>
                 {
                     new ClickUpCustomField
@@ -117,7 +104,7 @@ namespace Palantir.Api.Services
         /// </summary>
         /// <param name="ticketName"></param>
         /// <returns></returns>
-        private List<Tags> GetTagsFromTicketName(string ticketName)
+        private List<Tags> GetTagsFromTicketName(string ticketName, string pipeline)
         {
             var tags = new List<Tags>();
             string ticketNameLower = ticketName.ToLower();
@@ -143,6 +130,7 @@ namespace Palantir.Api.Services
             }
 
             tags.Add(new Tags { Name = "ticket" });
+            tags.Add(new Tags { Name = pipeline });
 
             return tags;
         }
@@ -167,7 +155,7 @@ namespace Palantir.Api.Services
                 Description = taskResponse.Description,
                 StartDate = taskResponse.StartDate,
                 DueDate = taskResponse.DueDate,
-                Priority = taskResponse.Priority.ToString(),
+                Priority = taskResponse.Priority,
                 Tags = taskResponse.Tags.Select(t => t.Name).ToList(),
                 Services = taskResponse.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.funcionalidade)?.Value,
                 Category = taskResponse.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.tipo)?.Value,
@@ -204,7 +192,7 @@ namespace Palantir.Api.Services
                     Description = task.Description,
                     StartDate = task.StartDate,
                     DueDate = task.DueDate,
-                    Priority = task.Priority.ToString(),
+                    Priority = task.Priority,
                     Tags = task.Tags.Select(t => t.Name).ToList(),
                     Services = task.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.funcionalidade)?.Value,
                     Category = task.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.tipo)?.Value,

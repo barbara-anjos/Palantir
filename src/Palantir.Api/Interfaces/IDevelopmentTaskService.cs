@@ -6,10 +6,10 @@ namespace Palantir.Api.Interfaces
 {
 	public interface IDevelopmentTaskService
 	{
-		//Task<SegfyTask> CreateTask(SegfyTask newTask);
+		Task<ClickUpTask> CreateTask(ClickUpTask newTask);
 
 		//criar tarefa
-		Task<bool> CreateTaskFromTicket(SegfyTask ticketProperties);
+		Task<bool> CreateTaskFromTicket(SegfyTask ticketProperties, string s);
 
         Task<SegfyTask> GetTaskById(string id);
 

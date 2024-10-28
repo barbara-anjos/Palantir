@@ -6,16 +6,18 @@ namespace Palantir.Api.Interfaces
 {
 	public interface IDevelopmentTaskService
 	{
-		Task<SegfyTask> CreateTask(SegfyTask newTask);
+		//Task<SegfyTask> CreateTask(SegfyTask newTask);
 
 		//criar tarefa
-		Task<bool> CreateTaskFromTicket(SegfyTask ticketProperties, string s);
+		Task<bool> CreateTaskFromTicket(SegfyTask ticketProperties);
 
-		//atualizar tarefa
-		//Task UpdateTaskAsync(string taskId, T updatedData);
+        Task<SegfyTask> GetTaskById(string id);
 
-		//buscar tarefa
-		Task<SegfyTask> GetTaskIdByTicketIdAsync(string ticketId);
+        //atualizar tarefa
+        //Task UpdateTaskAsync(string taskId, T updatedData);
+
+        //buscar tarefa
+        Task<SegfyTaskList> GetTaskIdByTicketIdAsync(string ticketId);
 
 		//excluir tarefa
 		//Task DeleteTaskAsync(string taskId);

@@ -19,4 +19,9 @@
 		public string Category { get; set; }
 		public string LinkIntranet { get; set; }
 	}
+
+    public class SegfyTaskList
+    {
+        public List<SegfyTask> Tasks { get; set; }
+    }
 }

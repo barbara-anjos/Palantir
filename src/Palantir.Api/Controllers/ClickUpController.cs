@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Palantir.Api.Configurations;
 using Palantir.Api.Interfaces;
+using Palantir.Api.Models;
 using Palantir.Api.Services;
 using static Palantir.Api.Models.ClickUpTaskModel;
 using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
@@ -11,11 +12,11 @@ using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 [Route("api/clickup")]
 public class ClickUpController : ControllerBase
 {
-    private readonly IDevelopmentTaskService<HubSpotTicketResponse, TaskList> _clickUpService;
+    private readonly IDevelopmentTaskService _clickUpService;
 	private readonly ICustomerTicketService<HubSpotTicketResponse> _hubSpotService;
 	private readonly string _clickUpApiToken;
 
-    public ClickUpController(IOptions<ClickUpSettings> clickUpSettings, IDevelopmentTaskService<HubSpotTicketResponse, TaskList> clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
+    public ClickUpController(IOptions<ClickUpSettings> clickUpSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
     {
         _hubSpotService = hubSpotService;
         _clickUpApiToken = clickUpSettings.Value.ApiToken;
@@ -28,7 +29,7 @@ public class ClickUpController : ControllerBase
 	/// <param name="newTask"></param>
 	/// <returns></returns>
 	[HttpPost("task")]
-    public async Task<IActionResult> CreateTask([FromBody] ClickUpTask newTask)
+    public async Task<IActionResult> CreateTask([FromBody] SegfyTask newTask)
     {
         if (newTask == null || string.IsNullOrEmpty(newTask.Name))
         {
@@ -36,7 +37,7 @@ public class ClickUpController : ControllerBase
         }
 
         var createdTask = await _clickUpService.CreateTask(newTask);
-        return CreatedAtAction(nameof(GetTask), new { id = createdTask.Id }, createdTask);
+        return CreatedAtAction(nameof(GetTask), new { id = createdTask.TaskId }, createdTask);
     }
 
 	/// <summary>

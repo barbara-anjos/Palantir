@@ -3,15 +3,11 @@ using Newtonsoft.Json;
 using Palantir.Api.Configurations;
 using static Palantir.Api.Models.ClickUpTaskModel;
 using Flurl.Http;
-using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 using Palantir.Api.Interfaces;
 using System.Net;
-using Palantir.Api.Enums;
-using Palantir.Api.Utils;
 using Palantir.Api.Utils.Const;
 using Palantir.Api.Models;
-using System.Net.Http.Headers;
-using System.Threading.Tasks;
+using System.Text;
 
 namespace Palantir.Api.Services
 {
@@ -43,14 +39,30 @@ namespace Palantir.Api.Services
         /// <returns></returns>
         public async Task<ClickUpTask> CreateTask(ClickUpTask task)
         {
-            var requestUrl = $"{_baseUrl}/list/{_listId}/task?custom_task_ids=true&team_id={_teamId}";
+            try
+            {
 
-            var taskResponse = await requestUrl
-                .WithOAuthBearerToken(_apiToken)
-                .PostJsonAsync(task)
-                .ReceiveJson<ClickUpTask>();
+				var requestUrl = $"{_baseUrl}/list/{_listId}/task";
 
-            return taskResponse;
+				var request = requestUrl
+					.WithHeader("Authorization", _apiToken);
+
+				string json = JsonConvert.SerializeObject(task);
+				var postData = new StringContent(json, Encoding.UTF8, "application/json");
+
+				var response = await request.PostAsync(postData);
+                var taskResponse = new ClickUpTask();
+                if (response.StatusCode == 200)
+                {
+                    taskResponse = await response.GetJsonAsync<ClickUpTask>();
+				}
+				return taskResponse;
+			}
+            catch (FlurlHttpException ex)
+            {
+				var error = await ex.GetResponseJsonAsync<object>();
+				throw;
+            }
         }
 
         /// <summary>
@@ -68,34 +80,34 @@ namespace Palantir.Api.Services
                 StartDate = ticket.StartDate,
                 DueDate = ticket.DueDate,
                 TimeEstimate = ticket.TimeEstimate,
-                Priority = ticket.Priority,
+                Priority = new Priority { Id = ticket.Priority.ToString() },
                 Tags = GetTagsFromTicketName(ticket.Name, ticket.Pipeline),
                 CustomFields = new List<ClickUpCustomField>
                 {
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.ticketId,
-                        Value = ticket.TicketId
+                        Name = ticket.TicketId
                     },
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.linkHubSpot,
-                        Value = $"https://app.hubspot.com/contacts/6828248/record/0-5/{ticket.TicketId}"
+                        Name = $"https://app.hubspot.com/contacts/6828248/record/0-5/{ticket.TicketId}"
                     },
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.urlIntranet,
-                        Value = ticket.LinkIntranet
+                        Name = ticket.LinkIntranet
                     },
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.tipo,
-                        Value = ticket.Category
+                        Name = ticket.Category
                     },
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.funcionalidade,
-                        Value = ticket.Services
+                        Name = ticket.Services
                     },
                 }
             };

@@ -36,18 +36,27 @@ namespace Palantir.Api.Models
 			[JsonProperty("time_estimate")]
 			public long? TimeEstimate { get; set; }
 
-			//[JsonProperty("priority")]
-			public int? Priority { get; set; }
+			[JsonProperty("priority")]
+			public Priority? Priority { get; set; }
 
 			[JsonProperty("tags")]
 			public List<Tags>? Tags { get; set; }
 
 			[JsonProperty("custom_fields")]
 			public List<ClickUpCustomField>? CustomFields { get; set; }
-        }
+		}
 
 		public class Tags
 		{
+			public string Name { get; set; }
+		}
+
+		public class Priority
+		{
+			[JsonProperty("id")]
+			public string Id { get; set; }
+
+			[JsonProperty("priority")]
 			public string Name { get; set; }
 		}
 
@@ -55,7 +64,7 @@ namespace Palantir.Api.Models
 		public class ClickUpCustomField
         {
             public string Id { get; set; }
-            public string Value { get; set; }
+            public string Name { get; set; }
         }
 
         public class ClickUpTaskResponse

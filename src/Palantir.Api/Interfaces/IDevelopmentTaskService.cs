@@ -11,13 +11,13 @@ namespace Palantir.Api.Interfaces
 		//criar tarefa
 		Task<bool> CreateTaskFromTicket(SegfyTask ticketProperties, string s);
 
-        Task<SegfyTask> GetTaskById(string id);
+        Task<ClickUpTask> GetTaskById(string id);
 
         //atualizar tarefa
         //Task UpdateTaskAsync(string taskId, T updatedData);
 
         //buscar tarefa
-        Task<SegfyTaskList> GetTaskIdByTicketIdAsync(string ticketId);
+        Task<TaskList> GetTaskIdByTicketIdAsync(string ticketId);
 
 		//excluir tarefa
 		//Task DeleteTaskAsync(string taskId);

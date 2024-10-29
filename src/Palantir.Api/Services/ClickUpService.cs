@@ -10,6 +10,8 @@ using Palantir.Api.Enums;
 using Palantir.Api.Utils;
 using Palantir.Api.Utils.Const;
 using Palantir.Api.Models;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace Palantir.Api.Services
 {
@@ -20,15 +22,18 @@ namespace Palantir.Api.Services
         private readonly string _baseUrl;
         private readonly string _listId;
         private readonly string _teamId;
-        private object _clickUpSettings;
+        private readonly ILogger<ClickUpService> _logger;
 
-        public ClickUpService(HttpClient httpClient, IOptions<ClickUpSettings> clickUpSettings)
+		public ClickUpService(HttpClient httpClient, IOptions<ClickUpSettings> clickUpSettings, ILogger<ClickUpService> logger)
         {
             _httpClient = httpClient;
             _apiToken = clickUpSettings.Value.ApiToken;
-            _baseUrl = clickUpSettings.Value.BaseUrl;
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("Authorization", _apiToken);
+			_baseUrl = clickUpSettings.Value.BaseUrl;
             _listId = clickUpSettings.Value.ListId;
             _teamId = clickUpSettings.Value.TeamId;
+            _logger = logger;
         }
 
         /// <summary>
@@ -140,29 +145,36 @@ namespace Palantir.Api.Services
         /// </summary>
         /// <param name="taskId"></param>
         /// <returns></returns>
-        public async Task<SegfyTask> GetTaskById(string taskId)
+        public async Task<ClickUpTask> GetTaskById(string taskId)
         {
-            var requestUrl = $"{_baseUrl}/task/{taskId}";
-
-            var taskResponse = await requestUrl
-                .WithOAuthBearerToken(_apiToken)
-                .GetJsonAsync<ClickUpTask>();
-
-            return new SegfyTask
+            try
             {
-                TaskId = taskResponse.Id,
-                Name = taskResponse.Name,
-                Description = taskResponse.Description,
-                StartDate = taskResponse.StartDate,
-                DueDate = taskResponse.DueDate,
-                Priority = taskResponse.Priority,
-                Tags = taskResponse.Tags.Select(t => t.Name).ToList(),
-                Services = taskResponse.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.funcionalidade)?.Value,
-                Category = taskResponse.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.tipo)?.Value,
-                LinkIntranet = taskResponse.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.urlIntranet)?.Value,
-                TicketId = taskResponse.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.ticketId)?.Value
-            };
-        }
+				var requestUrl = $"{_baseUrl}/task/{taskId}?custom_task_ids=true&team_id={_teamId}";
+
+				_logger.LogInformation($"Requesting URL: {requestUrl}");
+
+				var response = await _httpClient.GetAsync(requestUrl); 
+                var content = await response.Content.ReadAsStringAsync();
+
+				_logger.LogInformation($"Response Status Code: {response.StatusCode}");
+				_logger.LogInformation($"Response Content: {content}");
+
+				if (response.IsSuccessStatusCode && !string.IsNullOrEmpty(content))
+				{
+					var taskData = JsonConvert.DeserializeObject<ClickUpTask>(content);
+
+					return taskData;
+				}
+
+				return null;
+
+			}
+            catch (Exception ex)
+            {
+				_logger.LogError(ex, "An error occurred while getting the task by ID.");
+				throw;
+            }
+		}
 
         /// <summary>
         /// Get the task ID associated with the ticket ID in HubSpot
@@ -170,12 +182,11 @@ namespace Palantir.Api.Services
         /// <param name="ticketId"></param>
         /// <returns></returns>
         /// <exception cref="Exception"></exception>
-        public async Task<SegfyTaskList> GetTaskIdByTicketIdAsync(string ticketId)
+        public async Task<TaskList> GetTaskIdByTicketIdAsync(string ticketId)
         {
             try
             {
-                //Corrigir url base do clickup
-                var requestUrl = $"https://api.clickup.com/api/v2/list/{_listId}/task?custom_field={ticketId}";
+                var requestUrl = $"{_baseUrl}/list/{_listId}/task?custom_field=[{{\"field_id\":\"{CustomFieldsClickUp.ticketId}\",\"operator\":\"=\",\"value\":\"" + ticketId + "\"}]";
                 var response = await _httpClient.GetAsync(requestUrl);
 
                 if (response.StatusCode != HttpStatusCode.OK)
@@ -184,26 +195,10 @@ namespace Palantir.Api.Services
                 var content = await response.Content.ReadAsStringAsync();
                 var taskList = JsonConvert.DeserializeObject<TaskList>(content);
 
-                // Mapeia as tarefas para o tipo SegfyTask
-                var segfyTasks = taskList.Tasks.Select(task => new SegfyTask
-                {
-                    TaskId = task.Id,
-                    Name = task.Name,
-                    Description = task.Description,
-                    StartDate = task.StartDate,
-                    DueDate = task.DueDate,
-                    Priority = task.Priority,
-                    Tags = task.Tags.Select(t => t.Name).ToList(),
-                    Services = task.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.funcionalidade)?.Value,
-                    Category = task.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.tipo)?.Value,
-                    LinkIntranet = task.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.urlIntranet)?.Value,
-                    TicketId = task.CustomFields.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.ticketId)?.Value
-                }).ToList();
-
-                // Retorna uma nova instância de SegfyTaskList
-                return new SegfyTaskList { Tasks = segfyTasks };
+                return taskList;
             }
-            catch (Exception ex)
+
+			catch (Exception ex)
             {
                 throw new Exception($"Erro ao buscar tarefas: {ex.Message}");
             }

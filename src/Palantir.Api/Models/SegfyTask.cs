@@ -19,6 +19,7 @@
 		public string Category { get; set; }
 		public string LinkIntranet { get; set; }
 		public string Pipeline { get; set; }
+		public List<string> CustomFields { get; set; }
 	}
 
     public class SegfyTaskList

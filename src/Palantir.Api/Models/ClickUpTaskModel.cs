@@ -1,4 +1,6 @@
-﻿using static Palantir.Api.Models.ClickUpTaskModel;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using static Palantir.Api.Models.ClickUpTaskModel;
 
 namespace Palantir.Api.Models
 {
@@ -16,15 +18,32 @@ namespace Palantir.Api.Models
 
         public class ClickUpTask
         {
-            public string Id { get; set; }
-            public string Name { get; set; }
+            [JsonProperty("id")]
+            public string? Id { get; set; }
+
+			[JsonProperty("name")]
+			public string Name { get; set; }
+
+			[JsonProperty("description")]
 			public string Description { get; set; }
-            public long StartDate { get; set; }
-			public long DueDate { get; set; }
-            public long TimeEstimate { get; set; }
-            public int Priority { get; set; }
-            public List<Tags> Tags { get; set; }
-			public List<ClickUpCustomField> CustomFields { get; set; }
+
+			[JsonProperty("start_date")]
+			public long? StartDate { get; set; }
+
+			[JsonProperty("due_date")]
+			public long? DueDate { get; set; }
+
+			[JsonProperty("time_estimate")]
+			public long? TimeEstimate { get; set; }
+
+			//[JsonProperty("priority")]
+			public int? Priority { get; set; }
+
+			[JsonProperty("tags")]
+			public List<Tags>? Tags { get; set; }
+
+			[JsonProperty("custom_fields")]
+			public List<ClickUpCustomField>? CustomFields { get; set; }
         }
 
 		public class Tags

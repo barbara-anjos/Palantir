@@ -37,7 +37,7 @@ public class ClickUpController : ControllerBase
         }
 
         var createdTask = await _clickUpService.CreateTask(newTask);
-        return (IActionResult)createdTask;
+        return Ok(createdTask);
     }
 
 	/// <summary>

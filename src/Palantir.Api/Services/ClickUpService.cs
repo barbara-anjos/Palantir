@@ -41,7 +41,6 @@ namespace Palantir.Api.Services
         {
             try
             {
-
 				var requestUrl = $"{_baseUrl}/list/{_listId}/task";
 
 				var request = requestUrl
@@ -87,27 +86,27 @@ namespace Palantir.Api.Services
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.ticketId,
-                        Name = ticket.TicketId
+                        Value = ticket.TicketId
                     },
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.linkHubSpot,
-                        Name = $"https://app.hubspot.com/contacts/6828248/record/0-5/{ticket.TicketId}"
+                        Value = $"https://app.hubspot.com/contacts/6828248/record/0-5/{ticket.TicketId}"
                     },
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.urlIntranet,
-                        Name = ticket.LinkIntranet
+                        Value = ticket.LinkIntranet
                     },
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.tipo,
-                        Name = ticket.Category
+                        Value = new List<string> { ticket.Category }
                     },
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.funcionalidade,
-                        Name = ticket.Services
+                        Value = new List<string> { ticket.Services }
                     },
                 }
             };
@@ -216,41 +215,55 @@ namespace Palantir.Api.Services
             }
         }
 
-        //// Atualizar uma tarefa existente no ClickUp
-        //public async Task UpdateTaskAsync(string taskId, ClickUpTaskUpdateData updatedData)
-        //      {
-        //          var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
+		/// <summary>
+		/// Get the value of a custom field
+		/// </summary>
+		/// <param name="fieldType"></param>
+		/// <param name="customField"></param>
+		/// <returns></returns>
+		public object GetCustomFieldValue(string fieldType, object fieldValue)
+        {
+			return fieldType switch
+			{
+				"labels" or "drop_down" => fieldValue is string value ? new List<string> { value } : (List<string>)fieldValue
+			};
+		}
 
-        //          var taskUpdateData = new
-        //          {
-        //              status = updatedData.Status,
-        //              priority = MapPriority(updatedData.Priority),
-        //              due_date = new DateTimeOffset(updatedData.DueDate).ToUnixTimeMilliseconds()
-        //          };
+		//// Atualizar uma tarefa existente no ClickUp
+		//public async Task UpdateTaskAsync(string taskId, ClickUpTaskUpdateData updatedData)
+		//      {
+		//          var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
 
-        //          var content = new StringContent(JsonConvert.SerializeObject(taskUpdateData), Encoding.UTF8, "application/json");
-        //          _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
+		//          var taskUpdateData = new
+		//          {
+		//              status = updatedData.Status,
+		//              priority = MapPriority(updatedData.Priority),
+		//              due_date = new DateTimeOffset(updatedData.DueDate).ToUnixTimeMilliseconds()
+		//          };
 
-        //          var response = await _httpClient.PutAsync(requestUrl, content);
+		//          var content = new StringContent(JsonConvert.SerializeObject(taskUpdateData), Encoding.UTF8, "application/json");
+		//          _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
 
-        //          if (!response.IsSuccessStatusCode)
-        //          {
-        //              throw new Exception("Erro ao atualizar tarefa no ClickUp.");
-        //          }
-        //      }
+		//          var response = await _httpClient.PutAsync(requestUrl, content);
 
-        //      // Excluir uma tarefa no ClickUp
-        //      public async Task DeleteTaskAsync(string taskId)
-        //      {
-        //          var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
-        //          _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
+		//          if (!response.IsSuccessStatusCode)
+		//          {
+		//              throw new Exception("Erro ao atualizar tarefa no ClickUp.");
+		//          }
+		//      }
 
-        //          var response = await _httpClient.DeleteAsync(requestUrl);
+		//      // Excluir uma tarefa no ClickUp
+		//      public async Task DeleteTaskAsync(string taskId)
+		//      {
+		//          var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
+		//          _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
 
-        //          if (!response.IsSuccessStatusCode)
-        //          {
-        //              throw new Exception("Erro ao excluir a tarefa no ClickUp.");
-        //          }
-        //      }
-    }
+		//          var response = await _httpClient.DeleteAsync(requestUrl);
+
+		//          if (!response.IsSuccessStatusCode)
+		//          {
+		//              throw new Exception("Erro ao excluir a tarefa no ClickUp.");
+		//          }
+		//      }
+	}
 }

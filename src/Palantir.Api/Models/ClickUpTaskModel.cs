@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using static Palantir.Api.Models.ClickUpTaskModel;
 
@@ -48,6 +49,7 @@ namespace Palantir.Api.Models
 
 		public class Tags
 		{
+			[JsonProperty("name")]
 			public string Name { get; set; }
 		}
 
@@ -62,10 +64,45 @@ namespace Palantir.Api.Models
 
 
 		public class ClickUpCustomField
-        {
-            public string Id { get; set; }
-            public string Name { get; set; }
-        }
+		{
+			public ClickUpCustomField() {}
+
+			[JsonProperty("id")]
+			public string? Id { get; set; }
+
+			[JsonProperty("type")]
+			public string? Type { get; set; }
+
+			[JsonProperty("value")]
+			private JToken? RawValue { get; set; }
+
+			[JsonIgnore]
+			public object? Value
+			{
+				get
+				{
+					return Type switch
+					{
+						"labels" => RawValue?.ToObject<List<string>>(),
+						_ => RawValue?.ToString()
+					};
+				}
+				set
+				{
+					RawValue = value is List<string> list ? JToken.FromObject(list) : JToken.FromObject(value);
+				}
+			}
+
+			public ClickUpCustomField(string id, object value, string type)
+			{
+				Id = id;
+				Type = type;
+				Value = value;
+			}
+
+			[JsonProperty("required")]
+			public bool Required { get; set; }
+		}
 
         public class ClickUpTaskResponse
         {
@@ -88,6 +125,5 @@ namespace Palantir.Api.Models
 		{
 			public List<ClickUpTask> Tasks { get; set; }
 		}
-
 	}
 }

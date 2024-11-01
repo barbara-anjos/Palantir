@@ -197,7 +197,7 @@ namespace Palantir.Api.Services
         {
             try
             {
-                var requestUrl = $"{_baseUrl}/list/{_listId}/task?custom_field=[{{\"field_id\":\"{CustomFieldsClickUp.ticketId}\",\"operator\":\"=\",\"value\":\"" + ticketId + "\"}]";
+                var requestUrl = $"{_baseUrl}/list/{_listId}/task?custom_fields=[{{\"field_id\":\"{CustomFieldsClickUp.ticketId}\",\"operator\":\"=\",\"value\":\"" + ticketId + "\"}]";
                 var response = await _httpClient.GetAsync(requestUrl);
 
                 if (response.StatusCode != HttpStatusCode.OK)

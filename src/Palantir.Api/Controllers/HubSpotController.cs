@@ -35,9 +35,9 @@ public class HubSpotController : ControllerBase
         _clickUpService = clickUpService;
         _hubSpotService = hubSpotService;
         lockList = new List<long>();
-        _pipelineGestao = hubSpotSettings.Value.GestaoPipeline;
-        _pipelineAutomacao = hubSpotSettings.Value.AutomacaoPipeline;
-        _pipelineInfra = hubSpotSettings.Value.InfraPipeline;
+        _pipelineGestao = hubSpotSettings.Value.GestaoPipelineId;
+        _pipelineAutomacao = hubSpotSettings.Value.AutomacaoPipelineId;
+        _pipelineInfra = hubSpotSettings.Value.InfraPipelineId;
         _statusNovoGestao = hubSpotSettings.Value.GestaoNovoStageId;
         _statusNovoAutomacao = hubSpotSettings.Value.AutomacaoNovoStageId;
         _statusNovoInfra = hubSpotSettings.Value.InfraNovoStageId;
@@ -64,7 +64,7 @@ public class HubSpotController : ControllerBase
 
             try
             {
-                var eventType = !string.IsNullOrEmpty(notification.SubscriptionType) ? notification.SubscriptionType : notification.EventType;
+                var eventType = !string.IsNullOrEmpty(notification.SubscriptionType) ? notification.SubscriptionType : ""; // notification.EventType;
 
                 if (eventType != "ticket.creation" && eventType != "ticket.propertyChange")
                     throw new Exception("Only processes ticket creation notifications.");
@@ -81,7 +81,7 @@ public class HubSpotController : ControllerBase
 
                 //Check if the task already exists
                 var existTask = await _clickUpService.GetTaskIdByTicketIdAsync(ticket.Id);
-                if (existTask != null)
+                if (existTask != null && existTask.Tasks.Count > 0)
                     throw new Exception("Task alredy created.");
 
                 //Check the ticket pipeline to create the task with the correct pipeline tag
@@ -107,9 +107,9 @@ public class HubSpotController : ControllerBase
                 var dueDate = startDate.WorkingHours(timeEstimate);
 
                 //Only create the task if the ticket is in the expected pipeline and status
-                if ((ticketPipeline == _pipelineGestao && ticketStatus == _statusNovoGestao)
-                    || (ticketPipeline == _pipelineAutomacao && ticketStatus == _statusNovoAutomacao)
-                    || (ticketPipeline == _pipelineInfra && ticketStatus == _statusNovoInfra))
+                if ((ticketPipeline == "Gestão" && ticketStatus == _statusNovoGestao)
+                    || (ticketPipeline == "Automação" && ticketStatus == _statusNovoAutomacao)
+                    || (ticketPipeline == "Infra" && ticketStatus == _statusNovoInfra))
                 {
                     var segfyTask = new SegfyTask()
                     {

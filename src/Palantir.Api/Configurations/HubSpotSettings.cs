@@ -7,7 +7,7 @@ namespace Palantir.Api.Configurations
         public string ApiKey { get; set; }
         public string BaseUrl { get; set; }
         public string PropertiesUrl { get; set; }
-		public string GestaoPipeline { get; set; }
+		public string GestaoPipelineId { get; set; }
 		public string GestaoNovoStageId { get; set; }
 		public string GestaoExecutandoStageId { get; set; }
 		public string GestaoBloqueadoStageId { get; set; }
@@ -17,7 +17,7 @@ namespace Palantir.Api.Configurations
 		public string GestaoReprovadoStageId { get; set; }
 		public string GestaoAprovadoStageId { get; set; }
 		public string GestaoConcluidoStageId { get; set; }
-		public string AutomacaoPipeline { get; set; }
+		public string AutomacaoPipelineId { get; set; }
 		public string AutomacaoExecutandoStageId { get; set; }
 		public string AutomacaoBloqueadoStageId { get; set; }
 		public string AutomacaoComunicaoStageId { get; set; }
@@ -27,7 +27,7 @@ namespace Palantir.Api.Configurations
 		public string AutomacaoAprovadoStageId { get; set; }
 		public string AutomacaoConcluidoStageId { get; set; }
 		public string AutomacaoNovoStageId { get; set; }
-		public string InfraPipeline { get; set; }
+		public string InfraPipelineId { get; set; }
 		public string InfraNovoStageId { get; set; }
 		public string InfraEmTratativaStageId { get; set; }
 		public string InfraFechadoStageId { get; set; }

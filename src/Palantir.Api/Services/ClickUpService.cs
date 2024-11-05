@@ -79,8 +79,8 @@ namespace Palantir.Api.Services
                 StartDate = ticket.StartDate,
                 DueDate = ticket.DueDate,
                 TimeEstimate = ticket.TimeEstimate,
-                Priority = new Priority { Id = ticket.Priority.ToString() },
-                Tags = GetTagsFromTicketName(ticket.Name, ticket.Pipeline),
+                Priority = new Priority { Id = ticket.PriorityId.ToString() },
+                Tags = GetTagsFromTicketName(ticket.Name, s),
                 CustomFields = new List<ClickUpCustomField>
                 {
                     new ClickUpCustomField

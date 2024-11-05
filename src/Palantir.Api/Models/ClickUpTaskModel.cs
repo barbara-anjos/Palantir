@@ -5,22 +5,22 @@ using static Palantir.Api.Models.ClickUpTaskModel;
 
 namespace Palantir.Api.Models
 {
-    public class ClickUpTaskModel
-    {
-        public class ClickUpWebhookRequest
-        {
-            public string Event { get; set; }
-            public ClickUpTask Task { get; set; }
-            public string WorkspaceId { get; set; }
-            public string TeamId { get; set; }
-            public DateTime Timestamp { get; set; }
-            public string ObjectId => Task?.Id;
-        }
+	public class ClickUpTaskModel
+	{
+		public class ClickUpWebhookRequest
+		{
+			public string Event { get; set; }
+			public ClickUpTask Task { get; set; }
+			public string WorkspaceId { get; set; }
+			public string TeamId { get; set; }
+			public DateTime Timestamp { get; set; }
+			public string ObjectId => Task?.Id;
+		}
 
-        public class ClickUpTask
-        {
-            [JsonProperty("id")]
-            public string? Id { get; set; }
+		public class ClickUpTask
+		{
+			[JsonProperty("id")]
+			public string? Id { get; set; }
 
 			[JsonProperty("name")]
 			public string Name { get; set; }
@@ -50,25 +50,25 @@ namespace Palantir.Api.Models
 		public class Tags
 		{
 			[JsonProperty("name")]
-			public string Name { get; set; }
+			public string? Name { get; set; }
 		}
 
 		public class Priority
 		{
 			[JsonProperty("id")]
-			public string Id { get; set; }
-
-			[JsonProperty("priority")]
-			public string Name { get; set; }
+			public string? Id { get; set; }
 		}
 
 
 		public class ClickUpCustomField
 		{
-			public ClickUpCustomField() {}
+			public ClickUpCustomField() { }
 
 			[JsonProperty("id")]
 			public string? Id { get; set; }
+
+			[JsonProperty("name")]
+			public string? Name { get; set; }
 
 			[JsonProperty("type")]
 			public string? Type { get; set; }
@@ -104,15 +104,15 @@ namespace Palantir.Api.Models
 			public bool Required { get; set; }
 		}
 
-        public class ClickUpTaskResponse
-        {
-            public string Id { get; set; }
-            public string Name { get; set; }
-            public string Status { get; set; }
-            public List<ClickUpCustomField> CustomFields { get; set; }
-            public string DueDate { get; set; }
-            public string Assignee { get; set; }
-        }
+		public class ClickUpTaskResponse
+		{
+			public string Id { get; set; }
+			public string Name { get; set; }
+			public string Status { get; set; }
+			public List<ClickUpCustomField> CustomFields { get; set; }
+			public string DueDate { get; set; }
+			public string Assignee { get; set; }
+		}
 
 		public class ClickUpTaskUpdateData
 		{

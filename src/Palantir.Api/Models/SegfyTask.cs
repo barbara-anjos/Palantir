@@ -12,7 +12,8 @@
 		public long StartDate { get; set; }
 		public long DueDate { get; set; }
 		public int TimeEstimate { get; set; }
-		public int Priority { get; set; }
+		public int PriorityId { get; set; }
+		public string PriorityName { get; set; }
 		public List<string> Tags { get; set; }
 		public List<string> Comments { get; set; }
 		public string Services { get; set; }

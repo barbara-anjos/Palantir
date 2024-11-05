@@ -118,7 +118,12 @@ public class HubSpotController : ControllerBase
                         StartDate = new DateTimeOffset(startDate).ToUnixTimeMilliseconds(),
                         DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),
                         TimeEstimate = timeEstimate,
-                        Priority = HubSpotTicketPrioritySLAConstants.PriorityMap[prioritySegfy]
+                        PriorityId = HubSpotTicketPrioritySLAConstants.PriorityMap[prioritySegfy],
+                        PriorityName = prioritySegfy.ToString(),
+                        Category = ticket.Properties.Category,
+                        Services = ticket.Properties.Services,
+                        LinkIntranet = ticket.Properties.LinkIntranet,
+                        TicketId = ticket.Properties.Id
 					};
                     var task = await _clickUpService.CreateTaskFromTicket(segfyTask, ticketPipeline);
                     return task ? Ok("Task created successfully in ClickUp.") : StatusCode(500, "Failed to create task in ClickUp.");

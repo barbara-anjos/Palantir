@@ -50,16 +50,21 @@ namespace Palantir.Api.Services
 				var postData = new StringContent(json, Encoding.UTF8, "application/json");
 
 				var response = await request.PostAsync(postData);
-                var taskResponse = new ClickUpTask();
-                if (response.StatusCode == 200)
-                {
-                    taskResponse = await response.GetJsonAsync<ClickUpTask>();
+
+				var jsonResponse = await response.ResponseMessage.Content.ReadAsStringAsync();
+
+				if (response.ResponseMessage.IsSuccessStatusCode)
+				{
+					return JsonConvert.DeserializeObject<ClickUpTask>(jsonResponse);
 				}
-				return taskResponse;
+				else
+				{
+					throw new Exception("Failed to create task in ClickUp. " + jsonResponse);
+				}
 			}
             catch (FlurlHttpException ex)
             {
-				var error = await ex.GetResponseJsonAsync<object>();
+				var errorContent = await ex.GetResponseStringAsync();
 				throw;
             }
         }
@@ -79,7 +84,7 @@ namespace Palantir.Api.Services
                 StartDate = ticket.StartDate,
                 DueDate = ticket.DueDate,
                 TimeEstimate = ticket.TimeEstimate,
-                Priority = new Priority { Id = ticket.PriorityId.ToString() },
+                Priority = ticket.PriorityId,
                 Tags = GetTagsFromTicketName(ticket.Name, s),
                 CustomFields = new List<ClickUpCustomField>
                 {

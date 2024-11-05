@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using Palantir.Api.Utils;
 using static Palantir.Api.Models.ClickUpTaskModel;
 
 namespace Palantir.Api.Models
@@ -38,7 +39,8 @@ namespace Palantir.Api.Models
 			public long? TimeEstimate { get; set; }
 
 			[JsonProperty("priority")]
-			public Priority? Priority { get; set; }
+			[JsonConverter(typeof(PriorityConverter))]
+			public int? Priority { get; set; }
 
 			[JsonProperty("tags")]
 			public List<Tags>? Tags { get; set; }

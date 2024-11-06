@@ -106,12 +106,12 @@ namespace Palantir.Api.Services
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.tipo,
-                        Value = new List<string> { ticket.Category }
+                        Value = new List<string> { GetTipoFieldValue(ticket.Category) }
                     },
                     new ClickUpCustomField
                     {
                         Id = CustomFieldsClickUp.funcionalidade,
-                        Value = new List<string> { ticket.Services }
+                        Value = new List<string> { GetFuncionalidadeFieldValue(ticket.Services) }
                     },
                 }
             };
@@ -156,12 +156,43 @@ namespace Palantir.Api.Services
             return tags;
         }
 
-        /// <summary>
-        /// Get a task by ID
-        /// </summary>
-        /// <param name="taskId"></param>
-        /// <returns></returns>
-        public async Task<ClickUpTask> GetTaskById(string taskId)
+		/// <summary>
+		/// Gets the label ID for a given category
+		/// </summary>
+		/// <param name="category"></param>
+		/// <returns></returns>
+		/// <exception cref="KeyNotFoundException"></exception>
+		public static string GetTipoFieldValue(string category)
+		{
+			if (CustomFieldsClickUp.TipoValues.TryGetValue(category, out var fieldValue))
+			{
+				return fieldValue.FirstOrDefault();
+			}
+			throw new KeyNotFoundException($"No custom field ID found for category: {category}");
+		}
+
+		/// <summary>
+		/// Gets the label ID for a given service
+		/// </summary>
+		/// <param name="service"></param>
+		/// <returns></returns>
+		/// <exception cref="KeyNotFoundException"></exception>
+		public static string GetFuncionalidadeFieldValue(string service)
+		{
+			if (CustomFieldsClickUp.FuncionalidadeValues.TryGetValue(service, out var fieldValue))
+			{
+				return fieldValue.FirstOrDefault();
+			}
+			throw new KeyNotFoundException($"No custom field ID found for service: {service}");
+		}
+
+
+		/// <summary>
+		/// Get a task by ID
+		/// </summary>
+		/// <param name="taskId"></param>
+		/// <returns></returns>
+		public async Task<ClickUpTask> GetTaskById(string taskId)
         {
             try
             {

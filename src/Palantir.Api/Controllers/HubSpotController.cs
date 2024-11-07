@@ -117,7 +117,7 @@ public class HubSpotController : ControllerBase
                         Description = ticket.Properties.Content,
                         StartDate = new DateTimeOffset(startDate).ToUnixTimeMilliseconds(),
                         DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),
-                        TimeEstimate = timeEstimate,
+                        TimeEstimate = timeEstimate * 3600000,
                         PriorityId = HubSpotTicketPrioritySLAConstants.PriorityMap[prioritySegfy],
                         PriorityName = prioritySegfy.ToString(),
                         Category = ticket.Properties.Category,
@@ -192,7 +192,7 @@ public class HubSpotController : ControllerBase
     }
 
     ////Atualizar tarefa no ClickUp com base em alterações do tíquete
-   // [HttpPost]
+    //[HttpPost]
     //public async Task<IActionResult> UpdateTaskFromHubSpot([FromBody] HubSpotWebhookRequest webhookRequest)
     //{
     //    var ticketId = webhookRequest.ObjectId;

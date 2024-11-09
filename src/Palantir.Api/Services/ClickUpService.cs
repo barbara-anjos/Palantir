@@ -8,6 +8,8 @@ using System.Net;
 using Palantir.Api.Utils.Const;
 using Palantir.Api.Models;
 using System.Text;
+using System.Threading.Tasks;
+using System.Net.Sockets;
 
 namespace Palantir.Api.Services
 {
@@ -186,7 +188,6 @@ namespace Palantir.Api.Services
 			throw new KeyNotFoundException($"No custom field ID found for service: {service}");
 		}
 
-
 		/// <summary>
 		/// Get a task by ID
 		/// </summary>
@@ -265,41 +266,70 @@ namespace Palantir.Api.Services
 			};
 		}
 
-		//// Atualizar uma tarefa existente no ClickUp
-		//public async Task UpdateTaskAsync(string taskId, ClickUpTaskUpdateData updatedData)
-		//      {
-		//          var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
+		public async Task<ClickUpTask> UpdateTask(ClickUpTask task)
+		{
+			try
+			{
+				var requestUrl = $"{_baseUrl}/list/{_listId}/task";
 
-		//          var taskUpdateData = new
-		//          {
-		//              status = updatedData.Status,
-		//              priority = MapPriority(updatedData.Priority),
-		//              due_date = new DateTimeOffset(updatedData.DueDate).ToUnixTimeMilliseconds()
-		//          };
+				var request = requestUrl
+					.WithHeader("Authorization", _apiToken);
 
-		//          var content = new StringContent(JsonConvert.SerializeObject(taskUpdateData), Encoding.UTF8, "application/json");
-		//          _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
+				string json = JsonConvert.SerializeObject(task);
+				var postData = new StringContent(json, Encoding.UTF8, "application/json");
 
-		//          var response = await _httpClient.PutAsync(requestUrl, content);
+				var response = await request.PutAsync(postData);
 
-		//          if (!response.IsSuccessStatusCode)
-		//          {
-		//              throw new Exception("Erro ao atualizar tarefa no ClickUp.");
-		//          }
-		//      }
+				var jsonResponse = await response.ResponseMessage.Content.ReadAsStringAsync();
 
-		//      // Excluir uma tarefa no ClickUp
-		//      public async Task DeleteTaskAsync(string taskId)
-		//      {
-		//          var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
-		//          _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
+				if (response.ResponseMessage.IsSuccessStatusCode)
+				{
+					return JsonConvert.DeserializeObject<ClickUpTask>(jsonResponse);
+				}
+				else
+				{
+					throw new Exception("Failed to create task in ClickUp. " + jsonResponse);
+				}
+			}
+			catch (FlurlHttpException ex)
+			{
+				var errorContent = await ex.GetResponseStringAsync();
+				throw;
+			}
+		}
 
-		//          var response = await _httpClient.DeleteAsync(requestUrl);
+		/// <summary>
+		/// Update the ClickUp task when the HubSpot ticket changes
+		/// </summary>
+		/// <param name="taskId"></param>
+		/// <param name="updatedData"></param>
+		/// <returns></returns>
+		/// <exception cref="Exception"></exception>
+		public async Task<bool> UpdateTaskFromTicket(string taskId, SegfyTask updatedData)
+        {
+			var clickUpTask = new ClickUpTask
+			{				
+				StartDate = updatedData.StartDate,
+				Priority = updatedData.PriorityId,
+                Status = updatedData.Status,
+			};
 
-		//          if (!response.IsSuccessStatusCode)
-		//          {
-		//              throw new Exception("Erro ao excluir a tarefa no ClickUp.");
-		//          }
-		//      }
-	}
+			var updateTask = await UpdateTask(clickUpTask);
+			return updateTask != null;
+		}
+
+        //      // Excluir uma tarefa no ClickUp
+        //      public async Task DeleteTaskAsync(string taskId)
+        //      {
+        //          var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
+        //          _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
+
+        //          var response = await _httpClient.DeleteAsync(requestUrl);
+
+        //          if (!response.IsSuccessStatusCode)
+        //          {
+        //              throw new Exception("Erro ao excluir a tarefa no ClickUp.");
+        //          }
+        //      }
+    }
 }

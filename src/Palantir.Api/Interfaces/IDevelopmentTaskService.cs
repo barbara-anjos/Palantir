@@ -13,8 +13,10 @@ namespace Palantir.Api.Interfaces
 
         Task<ClickUpTask> GetTaskById(string id);
 
+		Task<ClickUpTask> UpdateTask(ClickUpTask updatedTask);
+
         //atualizar tarefa
-        //Task UpdateTaskAsync(string taskId, T updatedData);
+        Task <bool>UpdateTaskFromTicket(string taskId, SegfyTask updatedData);
 
         //buscar tarefa
         Task<TaskList> GetTaskIdByTicketIdAsync(string ticketId);

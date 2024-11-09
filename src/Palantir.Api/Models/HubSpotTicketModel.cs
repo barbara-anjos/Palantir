@@ -13,10 +13,6 @@ namespace Palantir.Api.Models
 		/// </summary>
 		public class HubSpotWebhookRequest
 		{
-			public long ObjectId { get; set; }
-
-			public List<HubSpotChangedProperty> HubSpotChangedProperties { get; set; }
-
 			/// <summary>
 			/// Represents a HubSpot ticket response.
 			/// </summary>
@@ -76,9 +72,6 @@ namespace Palantir.Api.Models
 				[JsonProperty("data_envio___dev")]
 				public DateTime? SendAt { get; set; }
 
-				[JsonProperty("hs_lastmodifieddate")]
-				public DateTime? LastModifiedDate { get; set; }
-
 				[JsonProperty("hs_pipeline")]
 				public string Pipeline { get; set; }
 
@@ -96,16 +89,6 @@ namespace Palantir.Api.Models
 				/// </summary>
 				[JsonProperty("content")]
 				public string? Content { get; set; }
-			}
-
-			/// <summary>
-			/// Represents a changed property in HubSpot.
-			/// </summary>
-			public class HubSpotChangedProperty
-			{
-				public string PropertyName { get; set; }
-
-				public string NewValue { get; set; }
 			}
 
 			/// <summary>

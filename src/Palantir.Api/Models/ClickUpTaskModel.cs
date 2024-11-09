@@ -2,7 +2,6 @@
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using Palantir.Api.Utils;
-using static Palantir.Api.Models.ClickUpTaskModel;
 
 namespace Palantir.Api.Models
 {
@@ -42,6 +41,10 @@ namespace Palantir.Api.Models
 			[JsonConverter(typeof(PriorityConverter))]
 			public int? Priority { get; set; }
 
+			[JsonProperty("status")]
+			[JsonConverter(typeof(StatusConverter))]
+			public string? Status { get; set; }
+
 			[JsonProperty("tags")]
 			public List<Tags>? Tags { get; set; }
 
@@ -60,7 +63,6 @@ namespace Palantir.Api.Models
 			[JsonProperty("id")]
 			public string? Id { get; set; }
 		}
-
 
 		public class ClickUpCustomField
 		{
@@ -114,13 +116,6 @@ namespace Palantir.Api.Models
 			public List<ClickUpCustomField> CustomFields { get; set; }
 			public string DueDate { get; set; }
 			public string Assignee { get; set; }
-		}
-
-		public class ClickUpTaskUpdateData
-		{
-			public string Status { get; set; }
-			public string Priority { get; set; }
-			public DateTime DueDate { get; set; }
 		}
 
 		public class TaskList

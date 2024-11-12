@@ -20,6 +20,6 @@ namespace Palantir.Api.Models
 		public string? PropertyValue { get; set; }
 
 		[JsonProperty("changeFlag")]
-		public string ChangeFlag { get; set; }
+		public string? ChangeFlag { get; set; }
 	}
 }

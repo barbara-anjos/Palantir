@@ -28,6 +28,24 @@ public class HubSpotController : ControllerBase
 	private readonly string _statusNovoGestao;
 	private readonly string _statusNovoAutomacao;
 	private readonly string _statusNovoInfra;
+	private readonly string _statusExecutandoGestao;
+	private readonly string _statusExecutandoAutomacao;
+	private readonly string _statusEmTratativaInfra;
+	private readonly string _statusBloqueadoGestao;
+	private readonly string _statusBloqueadoAutomacao;
+	private readonly string _statusComunicacaoGestao;
+	private readonly string _statusComunicacaoAutomacao;
+	private readonly string _statusTestarGestao;
+	private readonly string _statusTestarAutomacao;
+	private readonly string _statusTestandoGestao;
+	private readonly string _statusTestandoAutomacao;
+	private readonly string _statusReprovadoGestao;
+	private readonly string _statusReprovadoAutomacao;
+	private readonly string _statusAprovadoGestao;
+	private readonly string _statusAprovadoAutomacao;
+	private readonly string _statusConcluidoGestao;
+	private readonly string _statusConcluidoAutomacao;
+	private readonly string _statusFechadoInfra;
 
 	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
 	{
@@ -41,7 +59,25 @@ public class HubSpotController : ControllerBase
 		_statusNovoGestao = hubSpotSettings.Value.GestaoNovoStageId;
 		_statusNovoAutomacao = hubSpotSettings.Value.AutomacaoNovoStageId;
 		_statusNovoInfra = hubSpotSettings.Value.InfraNovoStageId;
-	}
+		_statusExecutandoGestao = hubSpotSettings.Value.GestaoExecutandoStageId;
+		_statusExecutandoAutomacao = hubSpotSettings.Value.AutomacaoExecutandoStageId;
+		_statusEmTratativaInfra = hubSpotSettings.Value.InfraEmTratativaStageId;
+		_statusBloqueadoGestao = hubSpotSettings.Value.GestaoBloqueadoStageId;
+		_statusBloqueadoAutomacao = hubSpotSettings.Value.AutomacaoBloqueadoStageId;
+		_statusComunicacaoGestao = hubSpotSettings.Value.GestaoComunicaoStageId;
+		_statusComunicacaoAutomacao = hubSpotSettings.Value.AutomacaoComunicaoStageId;
+		_statusTestarGestao = hubSpotSettings.Value.GestaoTestarStageId;
+		_statusTestarAutomacao = hubSpotSettings.Value.AutomacaoTestarStageId;
+		_statusTestandoGestao = hubSpotSettings.Value.GestaoTestandoStageId;
+		_statusTestandoAutomacao = hubSpotSettings.Value.AutomacaoTestandoStageId;
+		_statusReprovadoGestao = hubSpotSettings.Value.GestaoReprovadoStageId;
+		_statusReprovadoAutomacao = hubSpotSettings.Value.AutomacaoReprovadoStageId;
+		_statusAprovadoGestao = hubSpotSettings.Value.GestaoAprovadoStageId;
+		_statusAprovadoAutomacao = hubSpotSettings.Value.AutomacaoAprovadoStageId;
+		_statusConcluidoGestao = hubSpotSettings.Value.GestaoConcluidoStageId;
+		_statusConcluidoAutomacao = hubSpotSettings.Value.AutomacaoConcluidoStageId;
+		_statusFechadoInfra = hubSpotSettings.Value.InfraFechadoStageId;
+}
 
 	/// <summary>
 	/// Create or Update a task in ClickUp from a ticket in HubSpot
@@ -74,15 +110,26 @@ public class HubSpotController : ControllerBase
 				if (ticket == null)
 					return NotFound("Ticket not found or invalid.");
 
-				////Check the status to create the task
+				//Check the ticket status to set task status
 				var ticketStatus = ticket.Properties.Status;
-				//if (ticketStatus != _statusNovoGestao && ticketStatus != _statusNovoAutomacao && ticketStatus != _statusNovoInfra)
-				//	throw new Exception("Ticket status different than expected: Novo.");
-
-				//Check if the task already exists
-				//var existTask = await _clickUpService.GetTaskIdByTicketIdAsync(ticket.Id);
-				//if (existTask != null && existTask.Tasks.Count > 0 && eventType == "ticket.creation")
-				//	throw new Exception("Task alredy created.");
+				if (ticketStatus == _statusNovoGestao || ticketStatus == _statusNovoAutomacao || ticketStatus == _statusNovoInfra)
+					ticketStatus = "aberto";
+				if (ticketStatus == _statusExecutandoGestao || ticketStatus == _statusExecutandoAutomacao || ticketStatus == _statusEmTratativaInfra)
+					ticketStatus = "em andamento";
+				if (ticketStatus == _statusBloqueadoGestao || ticketStatus == _statusBloqueadoAutomacao)
+					ticketStatus = "bloqueado";
+				if (ticketStatus == _statusComunicacaoGestao || ticketStatus == _statusComunicacaoAutomacao)
+					ticketStatus = "comunicação cia";
+				if (ticketStatus == _statusTestarGestao || ticketStatus == _statusTestarAutomacao)
+					ticketStatus = "liberado p/ testes";
+				if (ticketStatus == _statusTestandoGestao || ticketStatus == _statusTestandoAutomacao)
+					ticketStatus = "testando";
+				if (ticketStatus == _statusReprovadoGestao || ticketStatus == _statusReprovadoAutomacao)
+					ticketStatus = "rejeitado";
+				if (ticketStatus == _statusAprovadoGestao || ticketStatus == _statusAprovadoAutomacao)
+					ticketStatus = "aguardando publicação";
+				if (ticketStatus == _statusConcluidoGestao || ticketStatus == _statusConcluidoAutomacao || ticketStatus == _statusFechadoInfra)
+					ticketStatus = "implementado";
 
 				//Check the ticket pipeline to create the task with the correct pipeline tag
 				var ticketPipeline = ticket.Properties.Pipeline;
@@ -110,11 +157,11 @@ public class HubSpotController : ControllerBase
 				var existTask = await _clickUpService.GetTaskIdByTicketIdAsync(ticket.Id);
 
 				//Check if the ticket is in the expected pipeline
-				if ((ticketPipeline == "Gestão") || (ticketPipeline == "Automação") || (ticketPipeline == "Infra"))
+				if (ticketPipeline == "Gestão" || ticketPipeline == "Automação" || ticketPipeline == "Infra")
 				{
 					//Notification type is ticket.creation and the task does not exist -> create task
 					//Notification type is ticket.propertyChange and the does not exist -> create task
-					if (existTask == null && existTask.Tasks.Count <= 0)
+					if (existTask == null || existTask.Tasks.Count <= 0)
 					{
 						var segfyTask = new SegfyTask()
 						{
@@ -140,32 +187,58 @@ public class HubSpotController : ControllerBase
 						var updatedPropertiesName = notification.PropertyName;
 						var updatedPropertiesValue = notification.PropertyValue;
 						var taskId = existTask.Tasks[0].Id;
-						var updatedTaskData = new SegfyTask();
+						var updatedTaskData = new SegfyTask()
+						{
+							Name = ticket.Properties.Name,
+							Description = ticket.Properties.Content,
+							StartDate = new DateTimeOffset(startDate).ToUnixTimeMilliseconds(),
+							DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),
+							TimeEstimate = timeEstimate * 3600000,
+							PriorityId = HubSpotTicketPrioritySLAConstants.PriorityMap[prioritySegfy],
+							Category = ticket.Properties.Category,
+							TicketId = ticket.Properties.Id,
+							Status = ticketStatus
+						};
 
-						//switch case com lista das propiedades monitoradas alteração (status, data de envio dev, prioridade)
 						switch (updatedPropertiesName)
-						{							
+						{
 							case "hs_pipeline_stage":
-								updatedTaskData = new SegfyTask()
-								{
-									Status = updatedPropertiesValue
-								};
+								updatedTaskData.Status = updatedPropertiesValue;
+								break;
+							case "subject":
+								updatedTaskData.Name = updatedPropertiesValue;
+								break;
+							case "content":
+								updatedTaskData.Description = updatedPropertiesValue;
 								break;
 							case "data_envio___dev":
-								updatedTaskData = new SegfyTask()
+								if (DateTimeOffset.TryParse(updatedPropertiesValue, out var parsedDate))
 								{
-									//StartDate = new DateTimeOffset(updatedPropertiesValue).ToUnixTimeMilliseconds(),
-								};
+									var startDateUpdated = parsedDate.DateTime;
+									var dueDateUpdated = startDateUpdated.WorkingHours(timeEstimate);
+									updatedTaskData.StartDate = new DateTimeOffset(startDateUpdated).ToUnixTimeMilliseconds();
+									updatedTaskData.DueDate = new DateTimeOffset(dueDateUpdated).ToUnixTimeMilliseconds();
+								}
 								break;
 							case "hs_ticket_priority":
-								updatedTaskData = new SegfyTask()
+								if (HubSpotTicketPrioritySLAConstants.PriorityDictionary.TryGetValue(updatedPropertiesValue, out var priorityId))
 								{
-									PriorityId = (int)HubSpotTicketPrioritySLAConstants.PriorityDictionary[updatedPropertiesValue]
-								};
+									updatedTaskData.PriorityId = (int)priorityId;
+									timeEstimate = (int)priorityId * 3600000;
+								}
+								break;
+							case "link_intranet":
+								updatedTaskData.LinkIntranet = updatedPropertiesValue;
+								break;
+							case "categoria":
+								updatedTaskData.Category = updatedPropertiesValue;
+								break;
+							case "servicos__clonado_":
+								updatedTaskData.Services = updatedPropertiesValue;
 								break;
 							default:
 								return Ok("Updated property is not tracked.");
-						}				
+						}
 
 						var taskUpdated = await _clickUpService.UpdateTaskFromTicket(taskId, updatedTaskData);
 						return taskUpdated ? Ok("Task updated successfully in ClickUp.") : StatusCode(500, "Failed to update task in ClickUp.");
@@ -234,7 +307,7 @@ public class HubSpotController : ControllerBase
 		}
 	}
 
-	
+
 	////Excluir tarefa no ClickUp quando o tíquete for excluído no HubSpot
 	//[HttpPost("delete-task-from-ticket")]
 	//public async Task<IActionResult> DeleteTaskFromHubSpot([FromBody] HubSpotWebhookRequest webhookRequest)

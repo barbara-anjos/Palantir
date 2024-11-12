@@ -266,11 +266,11 @@ namespace Palantir.Api.Services
 			};
 		}
 
-		public async Task<ClickUpTask> UpdateTask(ClickUpTask task)
+		public async Task<ClickUpTask> UpdateTask(ClickUpTask task, string taskId)
 		{
 			try
 			{
-				var requestUrl = $"{_baseUrl}/list/{_listId}/task";
+                var requestUrl = $"{_baseUrl}/task/{taskId}?custom_task_ids=true&team_id={_teamId}";
 
 				var request = requestUrl
 					.WithHeader("Authorization", _apiToken);
@@ -308,13 +308,35 @@ namespace Palantir.Api.Services
 		public async Task<bool> UpdateTaskFromTicket(string taskId, SegfyTask updatedData)
         {
 			var clickUpTask = new ClickUpTask
-			{				
+			{
+				Name = $"{updatedData.TicketId} - {updatedData.Name}",
+				Description = updatedData.Description,
 				StartDate = updatedData.StartDate,
+				DueDate = updatedData.DueDate,
+				TimeEstimate = updatedData.TimeEstimate,
 				Priority = updatedData.PriorityId,
                 Status = updatedData.Status,
-			};
+                CustomFields = new List<ClickUpCustomField>
+                {
+                    new ClickUpCustomField
+                    {
+                        Id = CustomFieldsClickUp.urlIntranet,
+                        Value = updatedData.LinkIntranet
+                    },
+                    new ClickUpCustomField
+                    {
+                        Id = CustomFieldsClickUp.tipo,
+                        Value = new List<string> { GetTipoFieldValue(updatedData.Category) }
+                    },
+                    new ClickUpCustomField
+                    {
+                        Id = CustomFieldsClickUp.funcionalidade,
+                        Value = new List<string> { GetFuncionalidadeFieldValue(updatedData.Services) }
+                    },
+                }
+            };
 
-			var updateTask = await UpdateTask(clickUpTask);
+			var updateTask = await UpdateTask(clickUpTask, taskId);
 			return updateTask != null;
 		}
 

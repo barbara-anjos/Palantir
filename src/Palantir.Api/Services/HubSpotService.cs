@@ -7,6 +7,7 @@ using Palantir.Api.Configurations;
 using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 using Palantir.Api.Interfaces;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Palantir.Api.Models;
 
 public class HubSpotService : ICustomerTicketService<HubSpotTicketResponse>
 {
@@ -46,27 +47,27 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketResponse>
 		return null;
 	}
 
-	//// Método para atualizar o status de um tíquete no HubSpot
-	//public async Task UpdateTicketStatusAsync(string ticketId, string newStatus)
-	//{
-	//    var requestUrl = $"{_baseUrl}/{ticketId}";
-	//    var data = new
-	//    {
-	//        properties = new
-	//        {
-	//            status = newStatus
-	//        }
-	//    };
+	
+	public async Task UpdateTicketFromTask(string ticketId, SegfyTask updatedData)
+	{
+		var requestUrl = $"{_baseUrl}/{ticketId}";
+		var data = new
+		{
+			properties = new
+			{
+				status = newStatus
+			}
+		};
 
-	//    var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-	//    _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
+		var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
+		_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
 
-	//    var response = await _httpClient.PatchAsync(requestUrl, content);
+		var response = await _httpClient.PatchAsync(requestUrl, content);
 
-	//    if (!response.IsSuccessStatusCode)
-	//    {
-	//        throw new Exception("Erro ao atualizar o status do tíquete no HubSpot.");
-	//    }
-	//}
+		if (!response.IsSuccessStatusCode)
+		{
+			throw new Exception("Erro ao atualizar o status do tíquete no HubSpot.");
+		}
+	}
 }
 

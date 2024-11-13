@@ -123,7 +123,7 @@ public class HubSpotController : ControllerBase
 				if (ticketStatus == _statusTestarGestao || ticketStatus == _statusTestarAutomacao)
 					ticketStatus = "liberado p/ testes";
 				if (ticketStatus == _statusTestandoGestao || ticketStatus == _statusTestandoAutomacao)
-					ticketStatus = "testando";
+					ticketStatus = "test plan running";
 				if (ticketStatus == _statusReprovadoGestao || ticketStatus == _statusReprovadoAutomacao)
 					ticketStatus = "rejeitado";
 				if (ticketStatus == _statusAprovadoGestao || ticketStatus == _statusAprovadoAutomacao)
@@ -159,24 +159,26 @@ public class HubSpotController : ControllerBase
 				//Check if the ticket is in the expected pipeline
 				if (ticketPipeline == "Gestão" || ticketPipeline == "Automação" || ticketPipeline == "Infra")
 				{
+					var segfyTask = new SegfyTask()
+					{
+						Name = ticket.Properties.Name,
+						Description = ticket.Properties.Content,
+						StartDate = new DateTimeOffset(startDate).ToUnixTimeMilliseconds(),
+						DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),
+						TimeEstimate = timeEstimate * 3600000,
+						PriorityId = HubSpotTicketPrioritySLAConstants.PriorityMap[prioritySegfy],
+						PriorityName = prioritySegfy.ToString(),
+						Category = ticket.Properties.Category,
+						Services = ticket.Properties.Services,
+						LinkIntranet = ticket.Properties.LinkIntranet,
+						TicketId = ticket.Properties.Id,
+						Status = ticketStatus
+					};
+
 					//Notification type is ticket.creation and the task does not exist -> create task
 					//Notification type is ticket.propertyChange and the does not exist -> create task
 					if (existTask == null || existTask.Tasks.Count <= 0)
-					{
-						var segfyTask = new SegfyTask()
-						{
-							Name = ticket.Properties.Name,
-							Description = ticket.Properties.Content,
-							StartDate = new DateTimeOffset(startDate).ToUnixTimeMilliseconds(),
-							DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),
-							TimeEstimate = timeEstimate * 3600000,
-							PriorityId = HubSpotTicketPrioritySLAConstants.PriorityMap[prioritySegfy],
-							PriorityName = prioritySegfy.ToString(),
-							Category = ticket.Properties.Category,
-							Services = ticket.Properties.Services,
-							LinkIntranet = ticket.Properties.LinkIntranet,
-							TicketId = ticket.Properties.Id
-						};
+					{						
 						var task = await _clickUpService.CreateTaskFromTicket(segfyTask, ticketPipeline);
 						return task ? Ok("Task created successfully in ClickUp.") : StatusCode(500, "Failed to create task in ClickUp.");
 					}
@@ -187,60 +189,48 @@ public class HubSpotController : ControllerBase
 						var updatedPropertiesName = notification.PropertyName;
 						var updatedPropertiesValue = notification.PropertyValue;
 						var taskId = existTask.Tasks[0].Id;
-						var updatedTaskData = new SegfyTask()
-						{
-							Name = ticket.Properties.Name,
-							Description = ticket.Properties.Content,
-							StartDate = new DateTimeOffset(startDate).ToUnixTimeMilliseconds(),
-							DueDate = new DateTimeOffset(dueDate).ToUnixTimeMilliseconds(),
-							TimeEstimate = timeEstimate * 3600000,
-							PriorityId = HubSpotTicketPrioritySLAConstants.PriorityMap[prioritySegfy],
-							Category = ticket.Properties.Category,
-							TicketId = ticket.Properties.Id,
-							Status = ticketStatus
-						};
 
 						switch (updatedPropertiesName)
 						{
 							case "hs_pipeline_stage":
-								updatedTaskData.Status = updatedPropertiesValue;
+								segfyTask.Status = updatedPropertiesValue;
 								break;
 							case "subject":
-								updatedTaskData.Name = updatedPropertiesValue;
+								segfyTask.Name = updatedPropertiesValue;
 								break;
 							case "content":
-								updatedTaskData.Description = updatedPropertiesValue;
+								segfyTask.Description = updatedPropertiesValue;
 								break;
 							case "data_envio___dev":
 								if (DateTimeOffset.TryParse(updatedPropertiesValue, out var parsedDate))
 								{
 									var startDateUpdated = parsedDate.DateTime;
 									var dueDateUpdated = startDateUpdated.WorkingHours(timeEstimate);
-									updatedTaskData.StartDate = new DateTimeOffset(startDateUpdated).ToUnixTimeMilliseconds();
-									updatedTaskData.DueDate = new DateTimeOffset(dueDateUpdated).ToUnixTimeMilliseconds();
+									segfyTask.StartDate = new DateTimeOffset(startDateUpdated).ToUnixTimeMilliseconds();
+									segfyTask.DueDate = new DateTimeOffset(dueDateUpdated).ToUnixTimeMilliseconds();
 								}
 								break;
 							case "hs_ticket_priority":
 								if (HubSpotTicketPrioritySLAConstants.PriorityDictionary.TryGetValue(updatedPropertiesValue, out var priorityId))
 								{
-									updatedTaskData.PriorityId = (int)priorityId;
+									segfyTask.PriorityId = (int)priorityId;
 									timeEstimate = (int)priorityId * 3600000;
 								}
 								break;
 							case "link_intranet":
-								updatedTaskData.LinkIntranet = updatedPropertiesValue;
+								segfyTask.LinkIntranet = updatedPropertiesValue;
 								break;
 							case "categoria":
-								updatedTaskData.Category = updatedPropertiesValue;
+								segfyTask.Category = updatedPropertiesValue;
 								break;
 							case "servicos__clonado_":
-								updatedTaskData.Services = updatedPropertiesValue;
+								segfyTask.Services = updatedPropertiesValue;
 								break;
 							default:
 								return Ok("Updated property is not tracked.");
 						}
 
-						var taskUpdated = await _clickUpService.UpdateTaskFromTicket(taskId, updatedTaskData);
+						var taskUpdated = await _clickUpService.UpdateTaskFromTicket(taskId, segfyTask);
 						return taskUpdated ? Ok("Task updated successfully in ClickUp.") : StatusCode(500, "Failed to update task in ClickUp.");
 					}
 				}

@@ -7,16 +7,6 @@ namespace Palantir.Api.Models
 {
 	public class ClickUpTaskModel
 	{
-		public class ClickUpWebhookRequest
-		{
-			public string Event { get; set; }
-			public ClickUpTask Task { get; set; }
-			public string WorkspaceId { get; set; }
-			public string TeamId { get; set; }
-			public DateTime Timestamp { get; set; }
-			public string ObjectId => Task?.Id;
-		}
-
 		public class ClickUpTask
 		{
 			[JsonProperty("id")]

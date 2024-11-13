@@ -2,11 +2,8 @@
 {
 	public interface ICustomerTicketService<T>
 	{
-		//buscar tíquete
 		Task<T> GetTicketByIdAsync(long ticketId);
 
-
-		//atualizar tíquete
-		//Task UpdateTicketStatusAsync(string ticketId, string newStatus);
+		Task<bool> UpdateTicketFromTask(string ticketId, T updateData);
 	}
 }

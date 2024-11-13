@@ -5,6 +5,8 @@ using Palantir.Api.Configurations;
 using Palantir.Api.Interfaces;
 using Palantir.Api.Models;
 using Palantir.Api.Services;
+using Palantir.Api.Utils.Const;
+using System.Reflection.Metadata.Ecma335;
 using static Palantir.Api.Models.ClickUpTaskModel;
 using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 
@@ -15,6 +17,7 @@ public class ClickUpController : ControllerBase
     private readonly IDevelopmentTaskService _clickUpService;
 	private readonly ICustomerTicketService<HubSpotTicketResponse> _hubSpotService;
 	private readonly string _clickUpApiToken;
+	private List<string> lockList;
 
     public ClickUpController(IOptions<ClickUpSettings> clickUpSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
     {
@@ -59,36 +62,89 @@ public class ClickUpController : ControllerBase
 		return Ok(task);
 	}
 
-	////// Webhook do ClickUp: Atualizar status do tíquete no HubSpot quando o status da tarefa for alterado no ClickUp
-	//[HttpPost]
-	//public async Task<IActionResult> UpdateTicketFromClickUp([FromBody] ClickUpTaskUpdateData taskUpdate)
-	//{
-	//    var taskId = webhookRequest.ObjectId;
-	//    var updatedProperties = webhookRequest;
+	[HttpPost("update-ticket-status")]
+	public async Task<IActionResult> UpdateTicketFromTask([FromBody] ClickUpWebhookPayload payload)
+	{
+		string taskId = payload.TaskId;
 
-	//    // Buscar o tíquete no HubSpot associado à tarefa no ClickUp
-	//    var hubSpotTicketId = await _hubSpotService.GetTicketByIdAsync(taskId);
+		if (!Lock(taskId))
+			return Ok("Task already been processed");
 
-	//    if (hubSpotTicketId != null)
-	//    {
-	//        // Atualizar o status do tíquete no HubSpot
-	//        await _hubSpotService.UpdateTicketStatusAsync(hubSpotTicketId, updatedProperties.Status);
-	//        return Ok("Tíquete no HubSpot atualizado com sucesso.");
-	//    }
+		try
+		{
+			//Get the task details
+			var task = await _clickUpService.GetTaskById(taskId);
+			if (task == null)
+				return NotFound("Task not found in ClickUp.");
 
-	//    return NotFound("Tíquete correspondente no HubSpot não encontrado.");
-	//}
+			//Check if the task corresponds to a ticket in HubSpot
+			var ticketIdField = task.CustomFields?.FirstOrDefault(cf => cf.Id == CustomFieldsClickUp.ticketId);
+			if (ticketIdField == null || string.IsNullOrEmpty((string?)ticketIdField.Value))
+				return NotFound("Task does not corresponds to a ticket.");
 
-	//Método para buscar o ID do tíquete do HubSpot associado a uma tarefa no ClickUp
-	//private async Task<string> GetHubSpotTicketIdByTaskId(string taskId)
-	//{
-	//    var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
+			string ticketId = (string)ticketIdField.Value;
+			var updatedData = new SegfyTask();
 
-	//    var taskResponse = await requestUrl
-	//        .WithOAuthBearerToken(_clickUpApiToken)
-	//        .GetJsonAsync<ClickUpTaskResponse>();
+			//Check if the ticket exists in HubSpot
+			var ticket = await _hubSpotService.GetTicketByIdAsync(long.Parse(ticketId));
+			if (ticket == null)
+				return NotFound("Ticket not found in HubSpot.");
 
-	//    return taskResponse.CustomFields
-	//        .FirstOrDefault(field => field.Name == "HubSpot Ticket ID")?.Value;
-	//}
+			// Update the status or priority of the ticket in HubSpot based on the payload
+			if (payload.HistoryItems.Field == "status")
+			{
+				updatedData = new SegfyTask
+				{
+					Status = payload.HistoryItems.After.Status
+				};
+			}
+			else if(payload.HistoryItems.Field == "priority")
+			{
+				updatedData = new SegfyTask
+				{
+					PriorityName = payload.HistoryItems.After.Priority
+				};
+			}
+
+			bool updateResult = await _hubSpotService.UpdateTicketFromTask(ticketId, updatedData);
+			if (!updateResult)
+				return StatusCode(500, "Failed to update the ticket in HubSpot.");
+
+			return Ok("Ticket status or priority updated successfully.");
+		}
+		catch (Exception ex)
+		{
+			return StatusCode(500, $"Internal server error: {ex.Message}");
+		}
+		finally
+		{
+			Unlock(taskId);
+		}
+	}
+
+	#region Payloads LockList
+
+	private bool Lock(string taskId)
+	{
+		lock (lockList)
+		{
+			if (lockList.Contains(taskId))
+			{
+				return false;
+			}
+
+			lockList.Add(taskId);
+			return true;
+		}
+	}
+
+	private void Unlock(string taskId)
+	{
+		lock (lockList)
+		{
+			lockList.Remove(taskId);
+		}
+	}
+
+	#endregion
 }

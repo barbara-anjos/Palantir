@@ -1,9 +1,13 @@
-﻿namespace Palantir.Api.Interfaces
+﻿using Palantir.Api.Models;
+
+namespace Palantir.Api.Interfaces
 {
 	public interface ICustomerTicketService<T>
 	{
 		Task<T> GetTicketByIdAsync(long ticketId);
 
-		Task<bool> UpdateTicketFromTask(string ticketId, T updateData);
+		Task<T> UpdateTicket(T ticket, string ticketId);
+
+		Task<bool> UpdateTicketFromTask(string ticketId, SegfyTask updateData);
 	}
 }

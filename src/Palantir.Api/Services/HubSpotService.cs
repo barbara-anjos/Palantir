@@ -8,6 +8,9 @@ using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 using Palantir.Api.Interfaces;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Palantir.Api.Models;
+using Flurl.Http;
+using static Palantir.Api.Models.ClickUpTaskModel;
+using System.Threading.Tasks;
 
 public class HubSpotService : ICustomerTicketService<HubSpotTicketResponse>
 {
@@ -32,42 +35,79 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketResponse>
 	/// <returns></returns>
 	public async Task<HubSpotTicketResponse> GetTicketByIdAsync(long ticketId)
 	{
-		var requestUrl = $"{_baseUrl}/{ticketId}/{_propertiesUrl}";
-
-		var response = await _httpClient.GetAsync(requestUrl);
-
-		if (response.IsSuccessStatusCode)
+		try
 		{
-			var content = await response.Content.ReadAsStringAsync();
-			var ticketData = JsonConvert.DeserializeObject<HubSpotTicketResponse>(content);
+			var requestUrl = $"{_baseUrl}/{ticketId}/{_propertiesUrl}";
 
-			return ticketData;
+			var request = requestUrl.WithOAuthBearerToken(_apiKey);
+
+			var response = await request.GetAsync();
+			var jsonResponse = await response.ResponseMessage.Content.ReadAsStringAsync();
+
+			if (response.ResponseMessage.IsSuccessStatusCode)
+			{
+				return JsonConvert.DeserializeObject<HubSpotTicketResponse>(jsonResponse);
+			}
+			else
+			{
+				throw new Exception($"Failed to get ticket from HubSpot. {jsonResponse}");
+			}
 		}
-
-		return null;
+		catch (FlurlHttpException ex)
+		{
+			var errorContent = await ex.GetResponseStringAsync();
+			throw new Exception($"Failed to get ticket from HubSpot. {errorContent}");
+		}
 	}
 
-	
-	public async Task UpdateTicketFromTask(string ticketId, SegfyTask updatedData)
+	public async Task<HubSpotTicketResponse> UpdateTicket(HubSpotTicketResponse ticket, string ticketId)
 	{
-		var requestUrl = $"{_baseUrl}/{ticketId}";
-		var data = new
+		try
 		{
-			properties = new
+			var requestUrl = $"{_baseUrl}/{ticketId}";
+			var request = requestUrl.WithOAuthBearerToken(_apiKey);
+
+			var settings = new JsonSerializerSettings
 			{
-				status = newStatus
+				NullValueHandling = NullValueHandling.Ignore
+			};
+
+			string json = JsonConvert.SerializeObject(ticket, settings);
+			var postData = new StringContent(json, Encoding.UTF8, "application/json");
+
+			var response = await request.PatchAsync(postData);
+
+			var jsonResponse = await response.ResponseMessage.Content.ReadAsStringAsync();
+
+			if (response.ResponseMessage.IsSuccessStatusCode)
+			{
+				return JsonConvert.DeserializeObject<HubSpotTicketResponse>(jsonResponse);
+			}
+			else
+			{
+				throw new Exception($"Failed to update ticket in HubSpot. {jsonResponse}");
+			}
+		}
+		catch (FlurlHttpException ex)
+		{
+			var errorContent = await ex.GetResponseStringAsync();
+			throw new Exception($"Failed to update ticket in HubSpot. {errorContent}");
+		}
+	}
+	
+	public async Task<bool> UpdateTicketFromTask(string ticketId, SegfyTask updatedData)
+	{
+		var data = new HubSpotTicketResponse
+		{
+			Properties =
+			{
+				Priority = updatedData.PriorityName,
+				Status = updatedData.Status
 			}
 		};
 
-		var content = new StringContent(JsonConvert.SerializeObject(data), Encoding.UTF8, "application/json");
-		_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
-
-		var response = await _httpClient.PatchAsync(requestUrl, content);
-
-		if (!response.IsSuccessStatusCode)
-		{
-			throw new Exception("Erro ao atualizar o status do tíquete no HubSpot.");
-		}
+		var updatedTask = await UpdateTicket(data, ticketId);
+		return updatedTask != null;
 	}
 }
 

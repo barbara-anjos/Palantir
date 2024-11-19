@@ -45,8 +45,7 @@ namespace Palantir.Api.Services
             {
 				var requestUrl = $"{_baseUrl}/list/{_listId}/task";
 
-				var request = requestUrl
-					.WithHeader("Authorization", _apiToken);
+				var request = requestUrl.WithHeader("Authorization", _apiToken);
 
 				string json = JsonConvert.SerializeObject(task);
 				var postData = new StringContent(json, Encoding.UTF8, "application/json");
@@ -61,14 +60,14 @@ namespace Palantir.Api.Services
 				}
 				else
 				{
-					throw new Exception("Failed to create task in ClickUp. " + jsonResponse);
+					throw new Exception($"Failed to create task in ClickUp. {jsonResponse}");
 				}
 			}
             catch (FlurlHttpException ex)
             {
 				var errorContent = await ex.GetResponseStringAsync();
-				throw;
-            }
+				throw new Exception($"Failed to creat task in ClickUp. {errorContent}");
+			}
         }
 
         /// <summary>
@@ -199,29 +198,26 @@ namespace Palantir.Api.Services
             {
 				var requestUrl = $"{_baseUrl}/task/{taskId}?custom_task_ids=true&team_id={_teamId}";
 
-				_logger.LogInformation($"Requesting URL: {requestUrl}");
+				var request = requestUrl.WithHeader("Authorization", _apiToken);
 
-				var response = await _httpClient.GetAsync(requestUrl); 
-                var content = await response.Content.ReadAsStringAsync();
+				var response = await request.GetAsync(); 
+                var jsonResponse = await response.ResponseMessage.Content.ReadAsStringAsync();
 
-				_logger.LogInformation($"Response Status Code: {response.StatusCode}");
-				_logger.LogInformation($"Response Content: {content}");
-
-				if (response.IsSuccessStatusCode && !string.IsNullOrEmpty(content))
+                if (response.ResponseMessage.IsSuccessStatusCode && !string.IsNullOrEmpty(jsonResponse))
+                {
+                    return JsonConvert.DeserializeObject<ClickUpTask>(jsonResponse);
+				}
+				else
 				{
-					var taskData = JsonConvert.DeserializeObject<ClickUpTask>(content);
-
-					return taskData;
+					throw new Exception($"Failed to get task by ID in ClickUp. {jsonResponse}");
 				}
 
-				return null;
-
 			}
-            catch (Exception ex)
+            catch (FlurlHttpException ex)
             {
-				_logger.LogError(ex, "An error occurred while getting the task by ID.");
-				throw;
-            }
+                var errorContent = await ex.GetResponseStringAsync();
+				throw new Exception($"Failed to get task by ID in ClickUp. {errorContent}");
+			}
 		}
 
         /// <summary>
@@ -232,24 +228,30 @@ namespace Palantir.Api.Services
         /// <exception cref="Exception"></exception>
         public async Task<TaskList> GetTaskIdByTicketIdAsync(string ticketId)
         {
-            try
-            {
-                var requestUrl = $"{_baseUrl}/list/{_listId}/task?custom_fields=[{{\"field_id\":\"{CustomFieldsClickUp.ticketId}\",\"operator\":\"=\",\"value\":\"" + ticketId + "\"}]";
-                var response = await _httpClient.GetAsync(requestUrl);
+			try
+			{
+				var requestUrl = $"{_baseUrl}/list/{_listId}/task?custom_fields=[{{\"field_id\":\"{CustomFieldsClickUp.ticketId}\",\"operator\":\"=\",\"value\":\"" + ticketId + "\"}]";
 
-                if (response.StatusCode != HttpStatusCode.OK)
-                    return null;
+				var request = requestUrl.WithHeader("Authorization", _apiToken);
 
-                var content = await response.Content.ReadAsStringAsync();
-                var taskList = JsonConvert.DeserializeObject<TaskList>(content);
+                var response = await request.GetAsync();
+                var jsonResponse = await response.ResponseMessage.Content.ReadAsStringAsync();
 
-                return taskList;
-            }
+                if (response.ResponseMessage.IsSuccessStatusCode)
+                {
+                    return JsonConvert.DeserializeObject<TaskList>(jsonResponse);
+                }
+                else
+                {
+                    throw new Exception($"Failed to get task by TicketId in ClickUp. {jsonResponse}");
+				}
+			}
 
-			catch (Exception ex)
-            {
-                throw new Exception($"Erro ao buscar tarefas: {ex.Message}");
-            }
+			catch (FlurlHttpException ex)
+			{
+				var errorContent = await ex.GetResponseStringAsync();
+				throw new Exception($"Failed to get task by TicketId in ClickUp. {errorContent}");
+			}
         }
 
 		/// <summary>
@@ -266,14 +268,20 @@ namespace Palantir.Api.Services
 			};
 		}
 
+		/// <summary>
+		/// Update a task
+		/// </summary>
+		/// <param name="task"></param>
+		/// <param name="taskId"></param>
+		/// <returns></returns>
+		/// <exception cref="Exception"></exception>
 		public async Task<ClickUpTask> UpdateTask(ClickUpTask task, string taskId)
 		{
 			try
 			{
                 var requestUrl = $"{_baseUrl}/task/{taskId}?custom_task_ids=true&team_id={_teamId}";
 
-				var request = requestUrl
-					.WithHeader("Authorization", _apiToken);
+				var request = requestUrl.WithHeader("Authorization", _apiToken);
 
 				string json = JsonConvert.SerializeObject(task);
 				var postData = new StringContent(json, Encoding.UTF8, "application/json");
@@ -288,13 +296,13 @@ namespace Palantir.Api.Services
 				}
 				else
 				{
-					throw new Exception("Failed to create task in ClickUp. " + jsonResponse);
+					throw new Exception($"Failed to update task in ClickUp. {jsonResponse}");
 				}
 			}
 			catch (FlurlHttpException ex)
 			{
 				var errorContent = await ex.GetResponseStringAsync();
-				throw;
+				throw new Exception($"Failed to update task in ClickUp. {errorContent}");
 			}
 		}
 
@@ -339,19 +347,5 @@ namespace Palantir.Api.Services
 			var updateTask = await UpdateTask(clickUpTask, taskId);
 			return updateTask != null;
 		}
-
-        //      // Excluir uma tarefa no ClickUp
-        //      public async Task DeleteTaskAsync(string taskId)
-        //      {
-        //          var requestUrl = $"https://api.clickup.com/api/v2/task/{taskId}";
-        //          _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiToken);
-
-        //          var response = await _httpClient.DeleteAsync(requestUrl);
-
-        //          if (!response.IsSuccessStatusCode)
-        //          {
-        //              throw new Exception("Erro ao excluir a tarefa no ClickUp.");
-        //          }
-        //      }
     }
 }

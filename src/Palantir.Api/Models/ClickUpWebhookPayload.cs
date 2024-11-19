@@ -8,14 +8,14 @@ namespace Palantir.Api.Models
 		[JsonProperty("event")]
 		public string Event { get; set; }
 
-		[JsonProperty("history_items")]
-		public HistoryItems HistoryItems { get; set; }
+		//[JsonProperty("history_items")]
+		public HistoryItems[] History_items { get; set; }
 
-		[JsonProperty("task_id")]
-		public string TaskId { get; set; }
+		//[JsonProperty("task_id")]
+		public string Task_id { get; set; }
 	}
 
-	public class HistoryItems
+	public partial class HistoryItems
 	{
 		[JsonProperty("field")]
 		public string Field { get; set; }
@@ -24,7 +24,7 @@ namespace Palantir.Api.Models
 		public After After { get; set; }
 	}
 
-	public class After
+	public partial class After
 	{
 		[JsonProperty("priority")]
 		public string? Priority { get; set; }

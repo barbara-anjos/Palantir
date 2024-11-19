@@ -22,16 +22,7 @@ namespace Palantir.Api.Models
 				public string Id { get; set; }
 
 				[JsonProperty("properties")]
-				public HubSpotTicketProperties Properties { get; set; }
-
-				[JsonProperty("createdAt")]
-				public DateTime CreatedAt { get; set; }
-
-				[JsonProperty("updatedAt")]
-				public DateTime UpdatedAt { get; set; }
-
-				[JsonProperty("archived")]
-				public bool Archived { get; set; }
+				public HubSpotTicketProperties Properties { get; set; } = new ();
 			}
 
 			/// <summary>

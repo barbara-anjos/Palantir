@@ -14,17 +14,18 @@ using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 [Route("api/clickup")]
 public class ClickUpController : ControllerBase
 {
-    private readonly IDevelopmentTaskService _clickUpService;
+	private readonly IDevelopmentTaskService _clickUpService;
 	private readonly ICustomerTicketService<HubSpotTicketResponse> _hubSpotService;
 	private readonly string _clickUpApiToken;
 	private List<string> lockList;
 
-    public ClickUpController(IOptions<ClickUpSettings> clickUpSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
-    {
-        _hubSpotService = hubSpotService;
-        _clickUpApiToken = clickUpSettings.Value.ApiToken;
-        _clickUpService = clickUpService;
-    }
+	public ClickUpController(IOptions<ClickUpSettings> clickUpSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
+	{
+		_hubSpotService = hubSpotService;
+		_clickUpApiToken = clickUpSettings.Value.ApiToken;
+		_clickUpService = clickUpService;
+		lockList = new List<string>();
+	}
 
 	/// <summary>
 	/// Endpoint to create a new task in ClickUp
@@ -32,16 +33,16 @@ public class ClickUpController : ControllerBase
 	/// <param name="newTask"></param>
 	/// <returns></returns>
 	[HttpPost("task")]
-    public async Task<IActionResult> CreateTask([FromBody] ClickUpTask newTask)
-    {
-        if (newTask == null || string.IsNullOrEmpty(newTask.Name))
-        {
-            return BadRequest("Invalid task data.");
-        }
+	public async Task<IActionResult> CreateTask([FromBody] ClickUpTask newTask)
+	{
+		if (newTask == null || string.IsNullOrEmpty(newTask.Name))
+		{
+			return BadRequest("Invalid task data.");
+		}
 
-        var createdTask = await _clickUpService.CreateTask(newTask);
-        return Ok(createdTask);
-    }
+		var createdTask = await _clickUpService.CreateTask(newTask);
+		return Ok(createdTask);
+	}
 
 	/// <summary>
 	/// Endpoint to get a task by ID
@@ -49,12 +50,17 @@ public class ClickUpController : ControllerBase
 	/// <param name="id"></param>
 	/// <returns></returns>
 	[HttpGet("task/{id}")]
-    public async Task<IActionResult> GetTask(string id)
-    {
-        var task = await _clickUpService.GetTaskById(id);
-        return Ok(task);
-    }
+	public async Task<IActionResult> GetTask(string id)
+	{
+		var task = await _clickUpService.GetTaskById(id);
+		return Ok(task);
+	}
 
+	/// <summary>
+	/// Endpoint to get a task by the custom field TicketId
+	/// </summary>
+	/// <param name="id"></param>
+	/// <returns></returns>
 	[HttpGet]
 	public async Task<IActionResult> GetTaskByTicketId(string id)
 	{
@@ -65,7 +71,7 @@ public class ClickUpController : ControllerBase
 	[HttpPost("update-ticket-status")]
 	public async Task<IActionResult> UpdateTicketFromTask([FromBody] ClickUpWebhookPayload payload)
 	{
-		string taskId = payload.TaskId;
+		string taskId = payload.Task_id;
 
 		if (!Lock(taskId))
 			return Ok("Task already been processed");
@@ -91,18 +97,18 @@ public class ClickUpController : ControllerBase
 				return NotFound("Ticket not found in HubSpot.");
 
 			// Update the status or priority of the ticket in HubSpot based on the payload
-			if (payload.HistoryItems.Field == "status")
+			if (payload.History_items.Any(hi => hi.Field == "status"))
 			{
 				updatedData = new SegfyTask
 				{
-					Status = payload.HistoryItems.After.Status
+					Status = payload.History_items.First(hi => hi.Field == "status").After.Status
 				};
 			}
-			else if(payload.HistoryItems.Field == "priority")
+			else if (payload.History_items.Any(hi => hi.Field == "priority"))
 			{
 				updatedData = new SegfyTask
 				{
-					PriorityName = payload.HistoryItems.After.Priority
+					PriorityName = payload.History_items.First(hi => hi.Field == "priority").After.Priority
 				};
 			}
 

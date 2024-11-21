@@ -11,6 +11,7 @@ using Palantir.Api.Models;
 using Flurl.Http;
 using static Palantir.Api.Models.ClickUpTaskModel;
 using System.Threading.Tasks;
+using Palantir.Api.Mappers;
 
 public class HubSpotService : ICustomerTicketService<HubSpotTicketResponse>
 {
@@ -18,14 +19,16 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketResponse>
 	private readonly string _apiKey;
 	private readonly string _baseUrl;
 	private readonly string _propertiesUrl;
+	private readonly StatusMapper _statusMapper;
 
-	public HubSpotService(HttpClient httpClient, IOptions<HubSpotSettings> hubSpotSettings)
+	public HubSpotService(HttpClient httpClient, IOptions<HubSpotSettings> hubSpotSettings, StatusMapper statusMapper)
 	{
 		_httpClient = httpClient;
 		_apiKey = hubSpotSettings.Value.ApiKey;
 		_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
 		_baseUrl = hubSpotSettings.Value.BaseUrl;
 		_propertiesUrl = hubSpotSettings.Value.PropertiesUrl;
+		_statusMapper = statusMapper;
 	}
 
 	/// <summary>
@@ -102,7 +105,7 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketResponse>
 			Properties =
 			{
 				Priority = updatedData.PriorityName,
-				Status = updatedData.Status
+				Status = _statusMapper.GetHubSpotStatus(updatedData.Status)
 			}
 		};
 

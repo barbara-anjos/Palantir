@@ -32,7 +32,7 @@ public class ClickUpController : ControllerBase
 	/// </summary>
 	/// <param name="newTask"></param>
 	/// <returns></returns>
-	[HttpPost("task")]
+	[HttpPost("create-task")]
 	public async Task<IActionResult> CreateTask([FromBody] ClickUpTask newTask)
 	{
 		if (newTask == null || string.IsNullOrEmpty(newTask.Name))
@@ -49,7 +49,7 @@ public class ClickUpController : ControllerBase
 	/// </summary>
 	/// <param name="id"></param>
 	/// <returns></returns>
-	[HttpGet("task/{id}")]
+	[HttpGet("get-task/{id}")]
 	public async Task<IActionResult> GetTask(string id)
 	{
 		var task = await _clickUpService.GetTaskById(id);
@@ -61,14 +61,14 @@ public class ClickUpController : ControllerBase
 	/// </summary>
 	/// <param name="id"></param>
 	/// <returns></returns>
-	[HttpGet]
+	[HttpGet("get-task-ticketId")]
 	public async Task<IActionResult> GetTaskByTicketId(string id)
 	{
 		var task = await _clickUpService.GetTaskIdByTicketIdAsync(id);
 		return Ok(task);
 	}
 
-	[HttpPost("update-ticket-status")]
+	[HttpPost("update-ticket")]
 	public async Task<IActionResult> UpdateTicketFromTask([FromBody] ClickUpWebhookPayload payload)
 	{
 		string taskId = payload.Task_id;
@@ -112,15 +112,12 @@ public class ClickUpController : ControllerBase
 				};
 			}
 
-			bool updateResult = await _hubSpotService.UpdateTicketFromTask(ticketId, updatedData);
-			if (!updateResult)
-				return StatusCode(500, "Failed to update the ticket in HubSpot.");
-
-			return Ok("Ticket status or priority updated successfully.");
+			var updateResult = await _hubSpotService.UpdateTicketFromTask(ticketId, updatedData);
+			return updateResult ? Ok("Ticket status or priority updated successfully.") : StatusCode(500, "Failed to update the ticket in HubSpot.");
 		}
 		catch (Exception ex)
 		{
-			return StatusCode(500, $"Internal server error: {ex.Message}");
+			return StatusCode(500, $"Failed to update the ticket in HubSpot: {ex.Message}");
 		}
 		finally
 		{

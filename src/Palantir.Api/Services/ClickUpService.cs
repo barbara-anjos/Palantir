@@ -10,6 +10,7 @@ using Palantir.Api.Models;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Sockets;
+using Palantir.Api.Mappers;
 
 namespace Palantir.Api.Services
 {
@@ -21,8 +22,9 @@ namespace Palantir.Api.Services
         private readonly string _listId;
         private readonly string _teamId;
         private readonly ILogger<ClickUpService> _logger;
+        private readonly StatusMapper _statusMapper;
 
-		public ClickUpService(HttpClient httpClient, IOptions<ClickUpSettings> clickUpSettings, ILogger<ClickUpService> logger)
+		public ClickUpService(HttpClient httpClient, IOptions<ClickUpSettings> clickUpSettings, ILogger<ClickUpService> logger, StatusMapper statusMapper)
         {
             _httpClient = httpClient;
             _apiToken = clickUpSettings.Value.ApiToken;
@@ -32,7 +34,8 @@ namespace Palantir.Api.Services
             _listId = clickUpSettings.Value.ListId;
             _teamId = clickUpSettings.Value.TeamId;
             _logger = logger;
-        }
+			_statusMapper = statusMapper;
+		}
 
         /// <summary>
         /// Create a task
@@ -323,7 +326,7 @@ namespace Palantir.Api.Services
 				DueDate = updatedData.DueDate,
 				TimeEstimate = updatedData.TimeEstimate,
 				Priority = updatedData.PriorityId,
-                Status = updatedData.Status,
+                Status = _statusMapper.GetClickUpStatus(updatedData.Status),
                 CustomFields = new List<ClickUpCustomField>
                 {
                     new ClickUpCustomField

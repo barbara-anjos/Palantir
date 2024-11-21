@@ -239,8 +239,7 @@ public class HubSpotController : ControllerBase
 			}
 			catch (Exception ex)
 			{
-				//colocar na aws
-				result.Message = ex.Message;
+				return StatusCode(500, $"Failed to update the ticket in HubSpot: {ex.Message}");
 			}
 			finally
 			{
@@ -297,23 +296,4 @@ public class HubSpotController : ControllerBase
 		}
 	}
 
-
-	////Excluir tarefa no ClickUp quando o tíquete for excluído no HubSpot
-	//[HttpPost("delete-task-from-ticket")]
-	//public async Task<IActionResult> DeleteTaskFromHubSpot([FromBody] HubSpotWebhookRequest webhookRequest)
-	//{
-	//    var ticketId = webhookRequest.ObjectId;
-
-	//    // Buscar o ID da tarefa no ClickUp associada ao ID do tíquete no HubSpot
-	//    var taskId = await _clickUpService.GetTaskIdByTicketIdAsync(ticketId);
-
-	//    if (taskId != null)
-	//    {
-	//        // Excluir a tarefa no ClickUp
-	//        await _clickUpService.DeleteTaskAsync(taskId);
-	//        return Ok("Tarefa excluída no ClickUp.");
-	//    }
-
-	//    return NotFound("Tarefa correspondente no ClickUp não encontrada.");
-	//}
 }

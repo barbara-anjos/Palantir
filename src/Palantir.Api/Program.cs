@@ -1,5 +1,6 @@
 using Palantir.Api.Configurations;
 using Palantir.Api.Interfaces;
+using Palantir.Api.Mappers;
 using Palantir.Api.Services;
 using static Palantir.Api.Models.ClickUpTaskModel;
 using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
@@ -15,6 +16,8 @@ builder.Services.Configure<HubSpotSettings>(builder.Configuration.GetSection("Hu
 
 builder.Services.AddSingleton<IDevelopmentTaskService, ClickUpService>();
 builder.Services.AddSingleton<ICustomerTicketService<HubSpotTicketResponse>, HubSpotService>();
+
+builder.Services.AddSingleton<StatusMapper>();
 
 builder.Services.AddControllers();
 

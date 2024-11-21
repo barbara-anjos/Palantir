@@ -316,7 +316,7 @@ namespace Palantir.Api.Services
 		/// <param name="updatedData"></param>
 		/// <returns></returns>
 		/// <exception cref="Exception"></exception>
-		public async Task<bool> UpdateTaskFromTicket(string taskId, SegfyTask updatedData)
+		public async Task<bool> UpdateTaskFromTicket(string taskId, SegfyTask updatedData, string pipeline)
         {
 			var clickUpTask = new ClickUpTask
 			{
@@ -326,7 +326,7 @@ namespace Palantir.Api.Services
 				DueDate = updatedData.DueDate,
 				TimeEstimate = updatedData.TimeEstimate,
 				Priority = updatedData.PriorityId,
-                Status = _statusMapper.GetClickUpStatus(updatedData.Status),
+                Status = _statusMapper.GetClickUpStatus(updatedData.Status, pipeline),
                 CustomFields = new List<ClickUpCustomField>
                 {
                     new ClickUpCustomField

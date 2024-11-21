@@ -11,7 +11,7 @@ namespace Palantir.Api.Configurations
 		public string GestaoNovoStageId { get; set; }
 		public string GestaoExecutandoStageId { get; set; }
 		public string GestaoBloqueadoStageId { get; set; }
-		public string GestaoComunicaoStageId { get; set; }
+		public string GestaoComunicacaoStageId { get; set; }
 		public string GestaoTestarStageId { get; set; }
 		public string GestaoTestandoStageId { get; set; }
 		public string GestaoReprovadoStageId { get; set; }
@@ -20,7 +20,7 @@ namespace Palantir.Api.Configurations
 		public string AutomacaoPipelineId { get; set; }
 		public string AutomacaoExecutandoStageId { get; set; }
 		public string AutomacaoBloqueadoStageId { get; set; }
-		public string AutomacaoComunicaoStageId { get; set; }
+		public string AutomacaoComunicacaoStageId { get; set; }
 		public string AutomacaoTestarStageId { get; set; }
 		public string AutomacaoTestandoStageId { get; set; }
 		public string AutomacaoReprovadoStageId { get; set; }

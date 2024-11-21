@@ -17,14 +17,14 @@ public class ClickUpController : ControllerBase
 	private readonly IDevelopmentTaskService _clickUpService;
 	private readonly ICustomerTicketService<HubSpotTicketResponse> _hubSpotService;
 	private readonly string _clickUpApiToken;
-	private List<string> lockList;
+	private List<string> _lockList;
 
 	public ClickUpController(IOptions<ClickUpSettings> clickUpSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
 	{
 		_hubSpotService = hubSpotService;
 		_clickUpApiToken = clickUpSettings.Value.ApiToken;
 		_clickUpService = clickUpService;
-		lockList = new List<string>();
+		_lockList = new List<string>();
 	}
 
 	/// <summary>
@@ -78,7 +78,7 @@ public class ClickUpController : ControllerBase
 
 		try
 		{
-			//Get the task details
+			//Get task details
 			var task = await _clickUpService.GetTaskById(taskId);
 			if (task == null)
 				return NotFound("Task not found in ClickUp.");
@@ -88,7 +88,13 @@ public class ClickUpController : ControllerBase
 			if (ticketIdField == null || string.IsNullOrEmpty((string?)ticketIdField.Value))
 				return NotFound("Task does not corresponds to a ticket.");
 
+			//Get ticket pipeline
+			var ticketPipelineName = task.Tags?.FirstOrDefault(t => t.Name == "gestão" || t.Name == "automação" || t.Name == "infra")?.Name;
+			if (string.IsNullOrEmpty(ticketPipelineName))
+				return NotFound("Task does not corresponds to a ticket.");
+
 			string ticketId = (string)ticketIdField.Value;
+			string ticketPipeline = (string)ticketPipelineName;
 			var updatedData = new SegfyTask();
 
 			//Check if the ticket exists in HubSpot
@@ -112,7 +118,7 @@ public class ClickUpController : ControllerBase
 				};
 			}
 
-			var updateResult = await _hubSpotService.UpdateTicketFromTask(ticketId, updatedData);
+			var updateResult = await _hubSpotService.UpdateTicketFromTask(ticketId, updatedData, ticketPipeline);
 			return updateResult ? Ok("Ticket status or priority updated successfully.") : StatusCode(500, "Failed to update the ticket in HubSpot.");
 		}
 		catch (Exception ex)
@@ -129,23 +135,23 @@ public class ClickUpController : ControllerBase
 
 	private bool Lock(string taskId)
 	{
-		lock (lockList)
+		lock (_lockList)
 		{
-			if (lockList.Contains(taskId))
+			if (_lockList.Contains(taskId))
 			{
 				return false;
 			}
 
-			lockList.Add(taskId);
+			_lockList.Add(taskId);
 			return true;
 		}
 	}
 
 	private void Unlock(string taskId)
 	{
-		lock (lockList)
+		lock (_lockList)
 		{
-			lockList.Remove(taskId);
+			_lockList.Remove(taskId);
 		}
 	}
 

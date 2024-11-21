@@ -98,14 +98,14 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketResponse>
 		}
 	}
 	
-	public async Task<bool> UpdateTicketFromTask(string ticketId, SegfyTask updatedData)
+	public async Task<bool> UpdateTicketFromTask(string ticketId, SegfyTask updatedData, string pipeline)
 	{
 		var data = new HubSpotTicketResponse
 		{
 			Properties =
 			{
 				Priority = updatedData.PriorityName,
-				Status = _statusMapper.GetHubSpotStatus(updatedData.Status)
+				Status = _statusMapper.GetHubSpotStatus(updatedData.Status, pipeline)
 			}
 		};
 

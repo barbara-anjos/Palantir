@@ -5,6 +5,7 @@ using Microsoft.VisualBasic;
 using Palantir.Api.Configurations;
 using Palantir.Api.Enums;
 using Palantir.Api.Interfaces;
+using Palantir.Api.Mappers;
 using Palantir.Api.Models;
 using Palantir.Api.Services;
 using Palantir.Api.Utils;
@@ -21,62 +22,23 @@ public class HubSpotController : ControllerBase
 	private readonly string _hubSpotApiKey;
 	private readonly IDevelopmentTaskService _clickUpService;
 	private readonly ICustomerTicketService<HubSpotTicketResponse> _hubSpotService;
-	private List<long> lockList;
+	private List<long> _lockList;
 	private readonly string _pipelineGestao;
 	private readonly string _pipelineAutomacao;
 	private readonly string _pipelineInfra;
-	private readonly string _statusNovoGestao;
-	private readonly string _statusNovoAutomacao;
-	private readonly string _statusNovoInfra;
-	private readonly string _statusExecutandoGestao;
-	private readonly string _statusExecutandoAutomacao;
-	private readonly string _statusEmTratativaInfra;
-	private readonly string _statusBloqueadoGestao;
-	private readonly string _statusBloqueadoAutomacao;
-	private readonly string _statusComunicacaoGestao;
-	private readonly string _statusComunicacaoAutomacao;
-	private readonly string _statusTestarGestao;
-	private readonly string _statusTestarAutomacao;
-	private readonly string _statusTestandoGestao;
-	private readonly string _statusTestandoAutomacao;
-	private readonly string _statusReprovadoGestao;
-	private readonly string _statusReprovadoAutomacao;
-	private readonly string _statusAprovadoGestao;
-	private readonly string _statusAprovadoAutomacao;
-	private readonly string _statusConcluidoGestao;
-	private readonly string _statusConcluidoAutomacao;
-	private readonly string _statusFechadoInfra;
+	private readonly ILogger<HubSpotController> _logger;
+	private readonly StatusMapper _statusMapper;
 
-	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
+	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService, StatusMapper statusMapper)
 	{
 		_hubSpotApiKey = hubSpotSettings.Value.ApiKey;
 		_clickUpService = clickUpService;
 		_hubSpotService = hubSpotService;
-		lockList = new List<long>();
+		_lockList = new List<long>();
 		_pipelineGestao = hubSpotSettings.Value.GestaoPipelineId;
 		_pipelineAutomacao = hubSpotSettings.Value.AutomacaoPipelineId;
 		_pipelineInfra = hubSpotSettings.Value.InfraPipelineId;
-		_statusNovoGestao = hubSpotSettings.Value.GestaoNovoStageId;
-		_statusNovoAutomacao = hubSpotSettings.Value.AutomacaoNovoStageId;
-		_statusNovoInfra = hubSpotSettings.Value.InfraNovoStageId;
-		_statusExecutandoGestao = hubSpotSettings.Value.GestaoExecutandoStageId;
-		_statusExecutandoAutomacao = hubSpotSettings.Value.AutomacaoExecutandoStageId;
-		_statusEmTratativaInfra = hubSpotSettings.Value.InfraEmTratativaStageId;
-		_statusBloqueadoGestao = hubSpotSettings.Value.GestaoBloqueadoStageId;
-		_statusBloqueadoAutomacao = hubSpotSettings.Value.AutomacaoBloqueadoStageId;
-		_statusComunicacaoGestao = hubSpotSettings.Value.GestaoComunicaoStageId;
-		_statusComunicacaoAutomacao = hubSpotSettings.Value.AutomacaoComunicaoStageId;
-		_statusTestarGestao = hubSpotSettings.Value.GestaoTestarStageId;
-		_statusTestarAutomacao = hubSpotSettings.Value.AutomacaoTestarStageId;
-		_statusTestandoGestao = hubSpotSettings.Value.GestaoTestandoStageId;
-		_statusTestandoAutomacao = hubSpotSettings.Value.AutomacaoTestandoStageId;
-		_statusReprovadoGestao = hubSpotSettings.Value.GestaoReprovadoStageId;
-		_statusReprovadoAutomacao = hubSpotSettings.Value.AutomacaoReprovadoStageId;
-		_statusAprovadoGestao = hubSpotSettings.Value.GestaoAprovadoStageId;
-		_statusAprovadoAutomacao = hubSpotSettings.Value.AutomacaoAprovadoStageId;
-		_statusConcluidoGestao = hubSpotSettings.Value.GestaoConcluidoStageId;
-		_statusConcluidoAutomacao = hubSpotSettings.Value.AutomacaoConcluidoStageId;
-		_statusFechadoInfra = hubSpotSettings.Value.InfraFechadoStageId;
+		_statusMapper = statusMapper;
 }
 
 	/// <summary>
@@ -112,24 +74,6 @@ public class HubSpotController : ControllerBase
 
 				//Check the ticket status to set task status
 				var ticketStatus = ticket.Properties.Status;
-				if (ticketStatus == _statusNovoGestao || ticketStatus == _statusNovoAutomacao || ticketStatus == _statusNovoInfra)
-					ticketStatus = "aberto";
-				if (ticketStatus == _statusExecutandoGestao || ticketStatus == _statusExecutandoAutomacao || ticketStatus == _statusEmTratativaInfra)
-					ticketStatus = "em andamento";
-				if (ticketStatus == _statusBloqueadoGestao || ticketStatus == _statusBloqueadoAutomacao)
-					ticketStatus = "bloqueado";
-				if (ticketStatus == _statusComunicacaoGestao || ticketStatus == _statusComunicacaoAutomacao)
-					ticketStatus = "comunicação cia";
-				if (ticketStatus == _statusTestarGestao || ticketStatus == _statusTestarAutomacao)
-					ticketStatus = "liberado p/ testes";
-				if (ticketStatus == _statusTestandoGestao || ticketStatus == _statusTestandoAutomacao)
-					ticketStatus = "test plan running";
-				if (ticketStatus == _statusReprovadoGestao || ticketStatus == _statusReprovadoAutomacao)
-					ticketStatus = "rejeitado";
-				if (ticketStatus == _statusAprovadoGestao || ticketStatus == _statusAprovadoAutomacao)
-					ticketStatus = "aguardando publicação";
-				if (ticketStatus == _statusConcluidoGestao || ticketStatus == _statusConcluidoAutomacao || ticketStatus == _statusFechadoInfra)
-					ticketStatus = "implementado";
 
 				//Check the ticket pipeline to create the task with the correct pipeline tag
 				var ticketPipeline = ticket.Properties.Pipeline;
@@ -150,7 +94,7 @@ public class HubSpotController : ControllerBase
 					prioritySegfy = HubSpotTicketSLA.LOW;
 
 				var timeEstimate = (int)prioritySegfy;
-				var startDate = ticket.Properties.SendAt ?? ticket.Properties.CreateDate;
+				var startDate = ticket.Properties.SendAt ?? DateTime.Now;
 				var dueDate = startDate.WorkingHours(timeEstimate);
 
 				//Check if the task already exists
@@ -172,13 +116,13 @@ public class HubSpotController : ControllerBase
 						Services = ticket.Properties.Services,
 						LinkIntranet = ticket.Properties.LinkIntranet,
 						TicketId = ticket.Properties.Id,
-						Status = ticketStatus
+						Status = _statusMapper.GetHubSpotStatus(ticketStatus, ticketPipeline)
 					};
 
 					//Notification type is ticket.creation and the task does not exist -> create task
 					//Notification type is ticket.propertyChange and the does not exist -> create task
 					if (existTask == null || existTask.Tasks.Count <= 0)
-					{						
+					{
 						var task = await _clickUpService.CreateTaskFromTicket(segfyTask, ticketPipeline);
 						return task ? Ok("Task created successfully in ClickUp.") : StatusCode(500, "Failed to create task in ClickUp.");
 					}
@@ -230,12 +174,16 @@ public class HubSpotController : ControllerBase
 								return Ok("Updated property is not tracked.");
 						}
 
-						var taskUpdated = await _clickUpService.UpdateTaskFromTicket(taskId, segfyTask);
+						var taskUpdated = await _clickUpService.UpdateTaskFromTicket(taskId, segfyTask, ticketPipeline);
+						results.Add(result);
 						return taskUpdated ? Ok("Task updated successfully in ClickUp.") : StatusCode(500, "Failed to update task in ClickUp.");
 					}
 				}
 				else
+				{
+					results.Add(result);
 					return Ok("Ticket pipeline different than expected: Gestão, Automação, Infra.");
+				}
 			}
 			catch (Exception ex)
 			{
@@ -245,8 +193,6 @@ public class HubSpotController : ControllerBase
 			{
 				Unlock(notification.ObjectId);
 			}
-
-			results.Add(result);
 		}
 
 		return Ok(results);
@@ -256,23 +202,23 @@ public class HubSpotController : ControllerBase
 
 	private bool Lock(long ticketId)
 	{
-		lock (lockList)
+		lock (_lockList)
 		{
-			if (lockList.Contains(ticketId))
+			if (_lockList.Contains(ticketId))
 			{
 				return false;
 			}
 
-			lockList.Add(ticketId);
+			_lockList.Add(ticketId);
 			return true;
 		}
 	}
 
 	private void Unlock(long ticketId)
 	{
-		lock (lockList)
+		lock (_lockList)
 		{
-			lockList.Remove(ticketId);
+			_lockList.Remove(ticketId);
 		}
 	}
 

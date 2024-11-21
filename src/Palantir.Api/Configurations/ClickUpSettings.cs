@@ -13,7 +13,7 @@
 		public string TestandoStatus { get; set; }
 		public string ReprovadoStatus { get; set; }
 		public string BloqueadoStatus { get; set; }
-		public string ComunicaoStatus { get; set; }
+		public string ComunicacaoStatus { get; set; }
 		public string AprovadoStatus { get; set; }
 		public string ConcluidoStatus { get; set; }
 	}

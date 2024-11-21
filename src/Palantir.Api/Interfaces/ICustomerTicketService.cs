@@ -8,6 +8,6 @@ namespace Palantir.Api.Interfaces
 
 		Task<T> UpdateTicket(T ticket, string ticketId);
 
-		Task<bool> UpdateTicketFromTask(string ticketId, SegfyTask updateData);
+		Task<bool> UpdateTicketFromTask(string ticketId, SegfyTask updateData, string pipeline);
 	}
 }

@@ -8,13 +8,13 @@ namespace Palantir.Api.Interfaces
 	{
 		Task<ClickUpTask> CreateTask(ClickUpTask newTask);
 
-		Task<bool> CreateTaskFromTicket(SegfyTask ticketProperties, string s);
+		Task<bool> CreateTaskFromTicket(SegfyTask ticketProperties, string pipeline);
 
 		Task<ClickUpTask> GetTaskById(string id);
 
 		Task<ClickUpTask> UpdateTask(ClickUpTask updatedTask, string taskId);
 
-		Task<bool> UpdateTaskFromTicket(string taskId, SegfyTask updatedData);
+		Task<bool> UpdateTaskFromTicket(string taskId, SegfyTask updatedData, string pipeline);
 
 		//Task<bool> UpdateTicketFromTask(string taskId, SegfyTask updatedData);
 

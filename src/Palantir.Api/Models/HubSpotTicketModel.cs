@@ -54,7 +54,7 @@ namespace Palantir.Api.Models
 				/// Gets or sets the creation date of the ticket.
 				/// </summary>
 				[JsonProperty("createdate")]
-				public DateTime CreateDate { get; set; }
+				public DateTime? CreateDate { get; set; }
 
 				/// <summary>
 				/// Gets or sets the 'data_envio_dev' property of the ticket.

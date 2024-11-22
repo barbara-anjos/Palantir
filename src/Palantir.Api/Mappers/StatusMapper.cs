@@ -3,6 +3,9 @@ using Palantir.Api.Configurations;
 
 namespace Palantir.Api.Mappers
 {
+	/// <summary>
+	/// Provides methods to map statuses between HubSpot and ClickUp.
+	/// </summary>
 	public class StatusMapper
 	{
 		private readonly Dictionary<string, Dictionary<string, string>> _hubSpotToClickUpStatus;
@@ -26,7 +29,7 @@ namespace Palantir.Api.Mappers
 						{ hubSpotSettings.Value.GestaoConcluidoStageId, clickUpSettings.Value.ConcluidoStatus }
 					}
 				},
-				{ 
+				{
 					"automação", new Dictionary<string, string>
 					{
 						{ hubSpotSettings.Value.AutomacaoNovoStageId, clickUpSettings.Value.NovoStatus },
@@ -47,7 +50,7 @@ namespace Palantir.Api.Mappers
 						{ hubSpotSettings.Value.InfraEmTratativaStageId, clickUpSettings.Value.ExecutandoStatus },
 						{ hubSpotSettings.Value.InfraFechadoStageId, clickUpSettings.Value.ConcluidoStatus }
 					}
-				}				
+				}
 			};
 
 			_clickUpToHubSpotStatus = _hubSpotToClickUpStatus
@@ -80,7 +83,7 @@ namespace Palantir.Api.Mappers
 		/// <returns></returns>
 		public string GetHubSpotStatus(string clickUpStatus, string pipeline)
 		{
-			if (_clickUpToHubSpotStatus.TryGetValue(pipeline, out var stageMappings) 
+			if (_clickUpToHubSpotStatus.TryGetValue(pipeline, out var stageMappings)
 				&& stageMappings.TryGetValue(clickUpStatus, out var hubSpotStageId))
 			{
 				return hubSpotStageId;

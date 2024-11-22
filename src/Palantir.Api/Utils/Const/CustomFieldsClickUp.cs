@@ -14,6 +14,7 @@
 
 		/// <summary>
 		/// The ids of values for custom field 'Tipo' in ClickUp
+		/// Converts the HubSpot 'Categoria' property to the ClickUp 'Tipo' custom field
 		/// </summary>
 		public static readonly Dictionary<string, List<string>> TipoValues = new Dictionary<string, List<string>>
 		{
@@ -27,6 +28,7 @@
 
 		/// <summary>
 		/// The ids of values for custom field 'Funcionalidade' in ClickUp
+		/// Converts the HubSpot 'Serviços' property to the ClickUp 'Funcionalidade' custom field
 		/// </summary>
 		public static readonly Dictionary<string, List<string>> FuncionalidadeValues = new Dictionary<string, List<string>>
 		{

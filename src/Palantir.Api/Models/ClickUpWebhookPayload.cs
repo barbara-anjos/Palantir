@@ -3,6 +3,9 @@ using static Palantir.Api.Models.ClickUpTaskModel;
 
 namespace Palantir.Api.Models
 {
+	/// <summary>
+	/// Represents a ClickUp webhook payload.
+	/// </summary>
 	public class ClickUpWebhookPayload
 	{
 		[JsonProperty("event")]
@@ -15,6 +18,9 @@ namespace Palantir.Api.Models
 		public string Task_id { get; set; }
 	}
 
+	/// <summary>
+	/// Represents the history items of a ClickUp webhook payload.
+	/// </summary>
 	public partial class HistoryItems
 	{
 		[JsonProperty("field")]
@@ -24,6 +30,9 @@ namespace Palantir.Api.Models
 		public After After { get; set; }
 	}
 
+	/// <summary>
+	/// Represents the 'after' property of a ClickUp webhook payload.
+	/// </summary>
 	public partial class After
 	{
 		[JsonProperty("priority")]

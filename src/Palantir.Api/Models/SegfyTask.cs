@@ -1,7 +1,7 @@
 ﻿namespace Palantir.Api.Models
 {
 	/// <summary>
-	/// 
+	/// Represents a generic task
 	/// </summary>
 	public class SegfyTask
 	{

@@ -1,9 +1,12 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System;
 
 namespace Palantir.Api.Utils
 {
+	/// <summary>
+	/// Converts a ClickUp status to a string.
+	/// Dealing with property "status" been an object when creating task and been an string when updating task.
+	/// </summary>
 	public class StatusConverter : JsonConverter
 	{
 		public override bool CanConvert(Type objectType) => objectType == typeof(string) || objectType == typeof(object);

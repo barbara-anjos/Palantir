@@ -80,36 +80,6 @@ namespace Palantir.Api.Models
 				[JsonProperty("content")]
 				public string? Content { get; set; }
 			}
-
-			/// <summary>
-			/// Represents the notes of a HubSpot ticket.
-			/// </summary>
-			public class HubSpotTicketNotes
-			{
-				public long EngagementId { get; set; }
-				public string Type { get; set; }
-				public DateTime CreatedAt { get; set; }
-				public DateTime UpdatedAt { get; set; }
-
-				public string Body { get; set; }
-
-				public List<HubSpotTicketNotesAttachment> NotesAttachment { get; set; }
-
-				public HubSpotTicketNotes()
-				{
-					NotesAttachment = new List<HubSpotTicketNotesAttachment>();
-				}
-
-				/// <summary>
-				/// Represents an attachment of a HubSpot ticket note.
-				/// </summary>
-				public class HubSpotTicketNotesAttachment
-				{
-					public long FileId { get; set; }
-					public string FileName { get; set; }
-					public string FileUrl { get; set; }
-				}
-			}
 		}
 	}
 }

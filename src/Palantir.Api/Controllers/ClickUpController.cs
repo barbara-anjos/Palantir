@@ -1,12 +1,10 @@
-﻿using Flurl.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Palantir.Api.Configurations;
 using Palantir.Api.Interfaces;
 using Palantir.Api.Models;
-using Palantir.Api.Services;
+using Palantir.Api.Utils;
 using Palantir.Api.Utils.Const;
-using System.Reflection.Metadata.Ecma335;
 using static Palantir.Api.Models.ClickUpTaskModel;
 using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 
@@ -16,15 +14,13 @@ public class ClickUpController : ControllerBase
 {
 	private readonly IDevelopmentTaskService _clickUpService;
 	private readonly ICustomerTicketService<HubSpotTicketResponse> _hubSpotService;
-	private readonly string _clickUpApiToken;
-	private List<string> _lockList;
+	private readonly LockManager<string> _lockManager;
 
 	public ClickUpController(IOptions<ClickUpSettings> clickUpSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService)
 	{
 		_hubSpotService = hubSpotService;
-		_clickUpApiToken = clickUpSettings.Value.ApiToken;
 		_clickUpService = clickUpService;
-		_lockList = new List<string>();
+		_lockManager = new LockManager<string>();
 	}
 
 	/// <summary>
@@ -73,7 +69,7 @@ public class ClickUpController : ControllerBase
 	{
 		string taskId = payload.Task_id;
 
-		if (!Lock(taskId))
+		if (!_lockManager.Lock(taskId))
 			return Ok("Task already been processed");
 
 		try
@@ -105,17 +101,11 @@ public class ClickUpController : ControllerBase
 			// Update the status or priority of the ticket in HubSpot based on the payload
 			if (payload.History_items.Any(hi => hi.Field == "status"))
 			{
-				updatedData = new SegfyTask
-				{
-					Status = payload.History_items.First(hi => hi.Field == "status").After.Status
-				};
+				updatedData.Status = payload.History_items.First(hi => hi.Field == "status").After.Status;
 			}
 			else if (payload.History_items.Any(hi => hi.Field == "priority"))
 			{
-				updatedData = new SegfyTask
-				{
-					PriorityName = payload.History_items.First(hi => hi.Field == "priority").After.Priority
-				};
+				updatedData.PriorityName = payload.History_items.First(hi => hi.Field == "priority").After.Priority;
 			}
 
 			var updateResult = await _hubSpotService.UpdateTicketFromTask(ticketId, updatedData, ticketPipeline);
@@ -127,33 +117,7 @@ public class ClickUpController : ControllerBase
 		}
 		finally
 		{
-			Unlock(taskId);
+			_lockManager.Unlock(taskId);
 		}
 	}
-
-	#region Payloads LockList
-
-	private bool Lock(string taskId)
-	{
-		lock (_lockList)
-		{
-			if (_lockList.Contains(taskId))
-			{
-				return false;
-			}
-
-			_lockList.Add(taskId);
-			return true;
-		}
-	}
-
-	private void Unlock(string taskId)
-	{
-		lock (_lockList)
-		{
-			_lockList.Remove(taskId);
-		}
-	}
-
-	#endregion
 }

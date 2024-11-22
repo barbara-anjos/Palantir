@@ -14,6 +14,7 @@
 			new DateTime(DateTime.Now.Year, 10, 12),// Nossa Senhora Aparecida
 			new DateTime(DateTime.Now.Year, 11, 2), // All Souls' Day
 			new DateTime(DateTime.Now.Year, 11, 15),// Republic Proclamation Day
+			new DateTime(DateTime.Now.Year, 11, 20),// Black Awareness Day
 			new DateTime(DateTime.Now.Year, 12, 25) // Christmas
 		};
 

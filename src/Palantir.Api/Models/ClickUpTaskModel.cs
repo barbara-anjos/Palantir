@@ -5,6 +5,9 @@ using Palantir.Api.Utils;
 
 namespace Palantir.Api.Models
 {
+	/// <summary>
+	/// Represents a ClickUp task model.
+	/// </summary>
 	public class ClickUpTaskModel
 	{
 		public class ClickUpTask
@@ -42,18 +45,27 @@ namespace Palantir.Api.Models
 			public List<ClickUpCustomField>? CustomFields { get; set; }
 		}
 
+		/// <summary>
+		/// Represents the tags of a ClickUp task.
+		/// </summary>
 		public class Tags
 		{
 			[JsonProperty("name")]
 			public string? Name { get; set; }
 		}
 
+		/// <summary>
+		/// Represents the priority of a ClickUp task.
+		/// </summary>
 		public class Priority
 		{
 			[JsonProperty("id")]
 			public string? Id { get; set; }
 		}
 
+		/// <summary>
+		/// Represents the Custom Fields of a ClickUp task.
+		/// </summary>
 		public class ClickUpCustomField
 		{
 			public ClickUpCustomField() { }
@@ -87,25 +99,8 @@ namespace Palantir.Api.Models
 				}
 			}
 
-			public ClickUpCustomField(string id, object value, string type)
-			{
-				Id = id;
-				Type = type;
-				Value = value;
-			}
-
 			[JsonProperty("required")]
 			public bool Required { get; set; }
-		}
-
-		public class ClickUpTaskResponse
-		{
-			public string Id { get; set; }
-			public string Name { get; set; }
-			public string Status { get; set; }
-			public List<ClickUpCustomField> CustomFields { get; set; }
-			public string DueDate { get; set; }
-			public string Assignee { get; set; }
 		}
 
 		public class TaskList

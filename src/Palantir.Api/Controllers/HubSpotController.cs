@@ -1,28 +1,20 @@
-﻿using Flurl.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Microsoft.VisualBasic;
 using Palantir.Api.Configurations;
 using Palantir.Api.Enums;
 using Palantir.Api.Interfaces;
 using Palantir.Api.Mappers;
 using Palantir.Api.Models;
-using Palantir.Api.Services;
 using Palantir.Api.Utils;
-using System.Diagnostics.Eventing.Reader;
-using System.Net.Sockets;
-using static Palantir.Api.Models.ClickUpTaskModel;
-using static Palantir.Api.Models.HubSpotTicketModel;
 using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 
 [ApiController]
 [Route("api/hubspot")]
 public class HubSpotController : ControllerBase
 {
-	private readonly string _hubSpotApiKey;
 	private readonly IDevelopmentTaskService _clickUpService;
 	private readonly ICustomerTicketService<HubSpotTicketResponse> _hubSpotService;
-	private List<long> _lockList;
+	private readonly LockManager<long> _lockManager;
 	private readonly string _pipelineGestao;
 	private readonly string _pipelineAutomacao;
 	private readonly string _pipelineInfra;
@@ -31,10 +23,9 @@ public class HubSpotController : ControllerBase
 
 	public HubSpotController(IOptions<HubSpotSettings> hubSpotSettings, IDevelopmentTaskService clickUpService, ICustomerTicketService<HubSpotTicketResponse> hubSpotService, StatusMapper statusMapper)
 	{
-		_hubSpotApiKey = hubSpotSettings.Value.ApiKey;
 		_clickUpService = clickUpService;
 		_hubSpotService = hubSpotService;
-		_lockList = new List<long>();
+		_lockManager = new LockManager<long>();
 		_pipelineGestao = hubSpotSettings.Value.GestaoPipelineId;
 		_pipelineAutomacao = hubSpotSettings.Value.AutomacaoPipelineId;
 		_pipelineInfra = hubSpotSettings.Value.InfraPipelineId;
@@ -54,7 +45,7 @@ public class HubSpotController : ControllerBase
 		foreach (var notification in notifications)
 		{
 			//Dealing with the same ticket in more than one notification: create or update
-			if (!Lock(notification.ObjectId))
+			if (!_lockManager.Lock(notification.ObjectId))
 				continue;
 
 			var result = new HubSpotNotificationResponse();
@@ -79,9 +70,9 @@ public class HubSpotController : ControllerBase
 				var ticketPipeline = ticket.Properties.Pipeline;
 				if (ticketPipeline == _pipelineGestao)
 					ticketPipeline = "Gestão";
-				if (ticketPipeline == _pipelineAutomacao)
+				else if (ticketPipeline == _pipelineAutomacao)
 					ticketPipeline = "Automação";
-				if (ticketPipeline == _pipelineInfra)
+				else if (ticketPipeline == _pipelineInfra)
 					ticketPipeline = "Infra";
 
 				var priority = HubSpotTicketPrioritySLAConstants.GetPriority(ticket.Properties.Priority ?? string.Empty);
@@ -191,38 +182,12 @@ public class HubSpotController : ControllerBase
 			}
 			finally
 			{
-				Unlock(notification.ObjectId);
+				_lockManager.Unlock(notification.ObjectId);
 			}
 		}
 
 		return Ok(results);
 	}
-
-	#region Notifications LockList
-
-	private bool Lock(long ticketId)
-	{
-		lock (_lockList)
-		{
-			if (_lockList.Contains(ticketId))
-			{
-				return false;
-			}
-
-			_lockList.Add(ticketId);
-			return true;
-		}
-	}
-
-	private void Unlock(long ticketId)
-	{
-		lock (_lockList)
-		{
-			_lockList.Remove(ticketId);
-		}
-	}
-
-	#endregion
 
 	[HttpGet("{ticketId}")]
 	public async Task<IActionResult> GetTicket(long ticketId)

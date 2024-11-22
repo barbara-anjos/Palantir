@@ -2,6 +2,9 @@
 
 namespace Palantir.Api.Models
 {
+	/// <summary>
+	/// Represents a HubSpot notification.
+	/// </summary>
 	public class HubSpotNotification
 	{
 		[JsonProperty("eventId")]

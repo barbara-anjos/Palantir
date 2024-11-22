@@ -1,6 +1,5 @@
 ﻿using Palantir.Api.Models;
 using static Palantir.Api.Models.ClickUpTaskModel;
-using static Palantir.Api.Models.HubSpotTicketModel.HubSpotWebhookRequest;
 
 namespace Palantir.Api.Interfaces
 {

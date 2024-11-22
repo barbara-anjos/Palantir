@@ -63,6 +63,13 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketResponse>
 		}
 	}
 
+	/// <summary>
+	/// Update a ticket in HubSpot
+	/// </summary>
+	/// <param name="ticket"></param>
+	/// <param name="ticketId"></param>
+	/// <returns></returns>
+	/// <exception cref="Exception"></exception>
 	public async Task<HubSpotTicketResponse> UpdateTicket(HubSpotTicketResponse ticket, string ticketId)
 	{
 		try
@@ -97,7 +104,14 @@ public class HubSpotService : ICustomerTicketService<HubSpotTicketResponse>
 			throw new Exception($"Failed to update ticket in HubSpot. {errorContent}");
 		}
 	}
-	
+
+	/// <summary>
+	/// Update a ticket in HubSpot from a task in ClickUp
+	/// </summary>
+	/// <param name="ticketId"></param>
+	/// <param name="updatedData"></param>
+	/// <param name="pipeline"></param>
+	/// <returns></returns>
 	public async Task<bool> UpdateTicketFromTask(string ticketId, SegfyTask updatedData, string pipeline)
 	{
 		var data = new HubSpotTicketResponse

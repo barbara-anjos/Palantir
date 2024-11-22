@@ -4,6 +4,10 @@ using System;
 
 namespace Palantir.Api.Utils
 {
+	/// <summary>
+	/// Converts a ClickUp priority to an integer.
+	/// Dealing with property "priority" been an object when creating task and been an int when updating task.
+	/// </summary>
 	public class PriorityConverter : JsonConverter
 	{
 		public override bool CanConvert(Type objectType) => objectType == typeof(int) || objectType == typeof(object);
